@@ -3,7 +3,7 @@
   name="px4_instance"
   pkg="sitl_launcher"
   type="run_px4.sh"
-  args="/home/tfoote/work/ar/ws/install/posix-configs/SITL/init/ekf2/iris"
+  args="posix-configs/SITL/init/ekf2/iris"
   cwd="node"
   output="screen" />
 </launch>

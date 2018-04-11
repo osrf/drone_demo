@@ -1,12 +1,13 @@
 #!/usr/bin/env sh
 
-dir=`mktemp -d`
-echo "temporary rootfs: $dir"
-# cp -R mixers $dir
-# cp -R rootfs $dir
+tempdir=`mktemp -d`
+echo "temporary rootfs: $tempdir"
 
-cp -R /home/tfoote/work/ar/ws/install/share/px4/* $dir
+px4dir=$(rospack find px4)
+echo "px4 dir detected: $px4dir"
 
-cd $dir
+cp -R ${px4dir}/* $tempdir
+
+cd $tempdir
 rc_script=$1
-px4 ${dir} ${rc_script}
+px4 ${tempdir} ${px4dir}/${rc_script}
