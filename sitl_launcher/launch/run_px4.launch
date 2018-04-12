@@ -1,4 +1,5 @@
 <launch>
+  <arg name="mavros" default="true" />
   <node
   name="px4_instance"
   pkg="sitl_launcher"
@@ -6,4 +7,10 @@
   args="posix-configs/SITL/init/ekf2/iris"
   cwd="node"
   output="screen" />
+  <include if="$(arg mavros)" file="$(find mavros)/launch/px4.launch">
+    <!-- ns="/@(vehicle_name)" -->
+    <arg name="fcu_url" value="udp://:14540@localhost:14557" />
+    <!-- <arg name="fcu_url" value="udp://:@(ros_interface_port4)@@@(local_ip):@(ros_interface_port3)" />
+    <arg name="tgt_system" value="@(mav_sys_id)" /> -->
+  </include>
 </launch>
