@@ -10,4 +10,4 @@ cp -R ${px4dir}/* $tempdir
 
 cd $tempdir
 rc_script=$1
-px4 ${tempdir} ${px4dir}/${rc_script}
+px4 ${tempdir} ${px4dir}/${rc_script} -d
