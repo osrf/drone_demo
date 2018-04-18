@@ -1,10 +1,11 @@
 <launch>
-  <arg name="mavros" default="true" />
+  <arg name="mavros" default="false" />
+  <arg name="config" default="posix-configs/SITL/init/ekf2/iris"/>
   <node
   name="px4_instance"
   pkg="sitl_launcher"
   type="run_px4.sh"
-  args="posix-configs/SITL/init/ekf2/iris"
+  args="$(arg config)"
   cwd="node"
   output="screen" />
   <include if="$(arg mavros)" file="$(find mavros)/launch/px4.launch">
