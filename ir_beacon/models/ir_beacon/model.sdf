@@ -1,0 +1,71 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+
+<model name="ir_beacon">
+  <static>true</static>
+  <pose>0.0 0.0 0.0 0 0 0</pose>
+  <link name="link">
+    <pose>0.0 0.0 0.025 0 0 0</pose>
+    <collision name="collision">
+      <geometry>
+        <box>
+          <size>0.1 0.1 0.05</size>
+        </box>
+      </geometry>
+    </collision>
+    <visual name="visual">
+      <geometry>
+        <box>
+          <size>0.1 0.1 0.05</size>
+        </box>
+      </geometry>
+    </visual>
+    <visual name="IR_LED_01">
+      <pose>0.025 0.025 0.025 0 0 0</pose>
+      <geometry>
+        <sphere>
+          <radius>0.005 0.005 0.005</radius>
+        </sphere>
+      </geometry>
+      <material>
+        <diffuse>1 0 0 1</diffuse>
+      </material>
+    </visual>
+    <visual name="IR_LED_02">
+      <pose>-0.025 0.025 0.025 0 0 0</pose>
+      <geometry>
+        <sphere>
+          <radius>0.005 0.005 0.005</radius>
+        </sphere>
+      </geometry>
+      <material>
+        <diffuse>1 0 0 1</diffuse>
+      </material>
+    </visual>
+    <visual name="IR_LED_03">
+      <pose>-0.025 -0.025 0.025 0 0 0</pose>
+      <geometry>
+        <sphere>
+          <radius>0.005 0.005 0.005</radius>
+        </sphere>
+      </geometry>
+      <material>
+        <diffuse>1 0 0 1</diffuse>
+      </material>
+    </visual>
+    <visual name="IR_LED_04">
+      <pose>0.025 -0.025 0.025 0 0 0</pose>
+      <geometry>
+        <sphere>
+          <radius>0.005 0.005 0.005</radius>
+        </sphere>
+      </geometry>
+      <material>
+        <diffuse>1 0 0 1</diffuse>
+      </material>
+    </visual>
+  </link>
+</model>
+
+</sdf>
+
