@@ -1,0 +1,9 @@
+<launch>
+  <arg name="world_name" default="worlds/iris_beacon.world"/> <!-- Note: the world_name is with respect to GAZEBO_RESOURCE_PATH environmental variable -->
+
+  <include file="$(find sitl_launcher)/launch/sitl.launch" pass_all_args="true">
+  </include>
+  <include file="$(find sitl_launcher)/launch/run_px4.launch">
+    <!-- <arg name="config" value=""/> -->
+  </include>
+</launch>
