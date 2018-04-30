@@ -59,10 +59,10 @@
           <update_rate>30</update_rate>
           <visualize>false</visualize>
           <plugin name="ir" filename="libgazebo_irsensor_plugin.so">
-            <target>ir_beacon::link::IR_LED_01</target>
-            <target>ir_beacon::link::IR_LED_02</target>
-            <target>ir_beacon::link::IR_LED_03</target>
-            <target>ir_beacon::link::IR_LED_04</target>
+            <target>ir_beacon::led_mount::IR_LED_01</target>
+            <target>ir_beacon::led_mount::IR_LED_02</target>
+            <target>ir_beacon::led_mount::IR_LED_03</target>
+            <target>ir_beacon::led_mount::IR_LED_04</target>
           </plugin>
 
           <plugin name="camera_plugin" filename="libgazebo_ros_camera.so">
