@@ -15,6 +15,8 @@
  *
  */
 
+
+#include <gazebo/gazebo_config.h>
 #include <gazebo/rendering/Scene.hh>
 #include <gazebo/rendering/RenderTypes.hh>
 
@@ -205,8 +207,13 @@ void IRMaterialHandler::TagIRVisual(rendering::VisualPtr _vis)
 
   // create a new visual representing the glow of the IR LED light source
   // so that the target appears larger in the image
+#if GAZEBO_MAJOR_VERSION >= 8
   rendering::VisualPtr visGlow(
       new rendering::Visual(_vis->Name()+"_glow", _vis, false));
+#else
+  rendering::VisualPtr visGlow(
+      new rendering::Visual(_vis->GetName()+"_glow", _vis, false));
+#endif
   visGlow->Load();
   visGlow->AttachMesh("unit_sphere");
   visGlow->SetScale(2 * ignition::math::Vector3d::One);
