@@ -15,6 +15,8 @@
  *
  */
 
+
+#include <gazebo/gazebo_config.h>
 #include <gazebo/rendering/Scene.hh>
 #include <gazebo/rendering/RenderTypes.hh>
 
@@ -74,6 +76,10 @@ namespace gazebo
                 uint16_t _schemeIndex, const Ogre::String &_schemeName,
                 Ogre::Material *_originalMaterial, uint16_t _lodIndex,
                 const Ogre::Renderable *_rend);
+
+    /// \brief Tag a visual and its children as IR target
+    /// \param[in] _vis Visual to be tagged
+    public: void TagIRVisual(rendering::VisualPtr _vis);
 
     /// \brief Pointer to the camera
     private: rendering::CameraPtr camera;
@@ -183,6 +189,42 @@ std::string IRMaterialHandler::MaterialScheme() const
 }
 
 /////////////////////////////////////////////////
+void IRMaterialHandler::TagIRVisual(rendering::VisualPtr _vis)
+{
+  if (!_vis)
+    return;
+
+  // tag child visuals too
+  for (unsigned int i = 0; i <_vis->GetChildCount(); ++i)
+  {
+    rendering::VisualPtr child = _vis->GetChild(i);
+    this->TagIRVisual(child);
+  }
+
+  if (_vis->GetType() != rendering::Visual::VT_VISUAL)
+    return;
+
+
+  // create a new visual representing the glow of the IR LED light source
+  // so that the target appears larger in the image
+#if GAZEBO_MAJOR_VERSION >= 8
+  rendering::VisualPtr visGlow(
+      new rendering::Visual(_vis->Name()+"_glow", _vis, false));
+#else
+  rendering::VisualPtr visGlow(
+      new rendering::Visual(_vis->GetName()+"_glow", _vis, false));
+#endif
+  visGlow->Load();
+  visGlow->AttachMesh("unit_sphere");
+  visGlow->SetScale(2 * ignition::math::Vector3d::One);
+
+  Ogre::SceneNode *node = visGlow->GetSceneNode();
+  Ogre::MovableObject *obj = node->getAttachedObject(0);
+  obj->getUserObjectBindings().setUserAny(Ogre::Any(std::string("ir_glow")));
+}
+
+
+/////////////////////////////////////////////////
 void IRMaterialHandler::PreRender()
 {
   rendering::ScenePtr scene = this->camera->GetScene();
@@ -194,18 +236,8 @@ void IRMaterialHandler::PreRender()
       ++it;
       continue;
     }
-
-    // create a new visual representing the glow of the IR LED light source
-    // so that the target appears larger in the image
-    rendering::VisualPtr visGlow(
-        new rendering::Visual(*it+"_glow", vis, false));
-    visGlow->Load();
-    visGlow->AttachMesh("unit_sphere");
-    visGlow->SetScale(2 * ignition::math::Vector3d::One);
-
-    Ogre::SceneNode *node = visGlow->GetSceneNode();
-    Ogre::MovableObject *obj = node->getAttachedObject(0);
-    obj->getUserObjectBindings().setUserAny(Ogre::Any(std::string("ir_glow")));
+    // tag it as an IR target
+    this->TagIRVisual(vis);
 
     this->targets.erase(it++);
   }
