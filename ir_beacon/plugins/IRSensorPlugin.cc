@@ -20,6 +20,7 @@
 #include <gazebo/rendering/Scene.hh>
 #include <gazebo/rendering/RenderTypes.hh>
 
+
 #include "IRSensorPlugin.hh"
 
 namespace gazebo
@@ -81,6 +82,10 @@ namespace gazebo
     /// \param[in] _vis Visual to be tagged
     public: void TagIRVisual(rendering::VisualPtr _vis);
 
+    /// \brief Remove a IR visual and its children
+    /// \param[in] _vis Visual to be untagged
+    public: void RemoveTag(rendering::VisualPtr _vis);
+
     /// \brief Pointer to the camera
     private: rendering::CameraPtr camera;
 
@@ -92,6 +97,9 @@ namespace gazebo
 
     /// \brief List of target names that will be detected by the camera
     private: std::set<std::string> targets;
+
+    /// \brief List of existing target visuals
+    private: std::vector<rendering::VisualPtr> targetVisuals;
 
     /// \brief Connection pointer used to connecto pre render events.
     private: event::ConnectionPtr preRenderCon;
@@ -207,13 +215,23 @@ void IRMaterialHandler::TagIRVisual(rendering::VisualPtr _vis)
 
   // create a new visual representing the glow of the IR LED light source
   // so that the target appears larger in the image
+  std::string irName;
 #if GAZEBO_MAJOR_VERSION >= 8
-  rendering::VisualPtr visGlow(
-      new rendering::Visual(_vis->Name()+"_glow", _vis, false));
+  irName = _vis->Name()+"_glow";
 #else
-  rendering::VisualPtr visGlow(
-      new rendering::Visual(_vis->GetName()+"_glow", _vis, false));
+  irName = _vis->GetName()+"_glow";
 #endif
+
+  // check if glow vis already exists
+  // if so, do not create another vis
+  if (_vis->GetScene()->GetVisual(irName))
+  {
+    return;
+  }
+
+  rendering::VisualPtr visGlow(
+      new rendering::Visual(irName, _vis, false));
+
   visGlow->Load();
   visGlow->AttachMesh("unit_sphere");
   visGlow->SetScale(2 * ignition::math::Vector3d::One);
@@ -223,10 +241,63 @@ void IRMaterialHandler::TagIRVisual(rendering::VisualPtr _vis)
   obj->getUserObjectBindings().setUserAny(Ogre::Any(std::string("ir_glow")));
 }
 
+/////////////////////////////////////////////////
+void IRMaterialHandler::RemoveTag(rendering::VisualPtr _vis)
+{
+  if (!_vis)
+    return;
+
+  // tag child visuals too
+  for (unsigned int i = 0; i <_vis->GetChildCount(); ++i)
+  {
+    rendering::VisualPtr child = _vis->GetChild(i);
+    this->RemoveTag(child);
+  }
+
+  Ogre::SceneNode *node = _vis->GetSceneNode();
+  if (!node)
+    return;
+
+  if (node->numAttachedObjects() == 0)
+    return;
+
+  Ogre::MovableObject *obj = node->getAttachedObject(0);
+  if (!obj)
+    return;
+
+  Ogre::Any objUserAny = obj->getUserObjectBindings().getUserAny();
+  if (objUserAny.isEmpty())
+    return;
+
+  std::string userAny = "";
+  try
+  {
+    userAny = Ogre::any_cast<std::string>(objUserAny);
+  }
+  catch(Ogre::Exception &e)
+  {
+    gzerr << "Unable to cast Ogre user data" << std::endl;
+    return;
+  }
+
+  // targets will have the user data "ir_glow"
+  if (userAny == "ir_glow")
+  {
+    _vis->GetScene()->RemoveVisual(_vis);
+  }
+}
+
 
 /////////////////////////////////////////////////
 void IRMaterialHandler::PreRender()
 {
+  // remove existing targets
+  for (auto vis : this->targetVisuals)
+  {
+    this->RemoveTag(vis);
+  }
+
+  // add new targets
   rendering::ScenePtr scene = this->camera->GetScene();
   for (auto it = this->targets.begin(); it != this->targets.end();)
   {
@@ -238,6 +309,7 @@ void IRMaterialHandler::PreRender()
     }
     // tag it as an IR target
     this->TagIRVisual(vis);
+    this->targetVisuals.push_back(vis);
 
     this->targets.erase(it++);
   }
@@ -400,4 +472,28 @@ void IRSensorPlugin::Load(sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
   this->materialHandler.reset(new IRMaterialHandler(camera));
   this->materialHandler->SetMaterialScheme("IR");
   this->materialHandler->SetTargets(targets);
+
+  // setup ROS callback
+  if (ros::isInitialized())
+  {
+    this->sub = this->nh.subscribe("ir_targets", 10,
+        &IRSensorPlugin::TargetCallback, this);
+  }
+  else
+  {
+    gzerr << "ROS is not running. /ir_targets ROS topic will not be available."
+          << std::endl;
+  }
+}
+
+/////////////////////////////////////////////////
+void IRSensorPlugin::TargetCallback(
+    const ir_beacon::Targets::ConstPtr &_msg)
+{
+  if (_msg->targets.empty())
+    return;
+
+  std::set<std::string> t(_msg->targets.begin(),
+      _msg->targets.end());
+  this->materialHandler->SetTargets(t);
 }

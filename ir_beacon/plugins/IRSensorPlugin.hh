@@ -26,6 +26,9 @@
 #include <gazebo/sensors/CameraSensor.hh>
 #include <gazebo/rendering/Camera.hh>
 
+#include <ros/ros.h>
+#include <ir_beacon/Targets.h>
+
 namespace gazebo
 {
   class IRMaterialHandler;
@@ -46,6 +49,11 @@ namespace gazebo
     // Documentation inherited
     public: virtual void Load(sensors::SensorPtr _sensor, sdf::ElementPtr _sdf);
 
+    /// \brief Callback for new IR targets are specified
+    /// \param[in] _msg Targets message containing a string array field
+    /// named 'targets'
+    public: void TargetCallback(const ir_beacon::Targets::ConstPtr &_msg);
+
     /// \brief Pointer to parent sensor
     private: sensors::CameraSensorPtr parentSensor;
 
@@ -55,6 +63,12 @@ namespace gazebo
     /// \brief switcher the material of objects in camera view for simulating 
     /// IR camera
     private: IRMaterialHandlerPtr materialHandler;
+
+    /// \brief ROS node handle
+    private: ros::NodeHandle nh;
+
+    /// \brief ROS subscriber to IR target topic
+    private: ros::Subscriber sub;
   };
 }
 #endif
