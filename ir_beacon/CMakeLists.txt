@@ -10,7 +10,6 @@ project(ir_beacon)
 find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   roscpp
-  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions

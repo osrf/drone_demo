@@ -18,7 +18,6 @@
   </export>
 
   <depend>roscpp</depend>
-  <depend>std_msgs</depend>
   <depend>genmsg</depend>
 
 </package>

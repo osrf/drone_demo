@@ -103,6 +103,12 @@ namespace gazebo
 
     /// \brief Connection pointer used to connecto pre render events.
     private: event::ConnectionPtr preRenderCon;
+
+    /// \brief Muitex to protect targets
+    private: std::mutex mutex;
+
+    /// \brief Flag to indicate if we need to remove existing target visuals
+    private: bool removeExistingTargets = false;
   };
 }
 
@@ -184,6 +190,8 @@ void IRMaterialHandler::SetMaterialScheme(const std::string &_scheme)
 /////////////////////////////////////////////////
 void IRMaterialHandler::SetTargets(const std::set<std::string> &_targets)
 {
+  std::lock_guard<std::mutex> lock(this->mutex);
+  this->removeExistingTargets = true;
   this->targets = _targets;
 
   this->preRenderCon = event::Events::ConnectPreRender(
@@ -292,9 +300,14 @@ void IRMaterialHandler::RemoveTag(rendering::VisualPtr _vis)
 void IRMaterialHandler::PreRender()
 {
   // remove existing targets
-  for (auto vis : this->targetVisuals)
+  std::lock_guard<std::mutex> lock(this->mutex);
+  if (this->removeExistingTargets)
   {
-    this->RemoveTag(vis);
+    for (auto vis : this->targetVisuals)
+    {
+      this->RemoveTag(vis);
+    }
+    this->removeExistingTargets = false;
   }
 
   // add new targets
