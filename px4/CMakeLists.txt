@@ -193,6 +193,11 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+# Configure the setup script
+catkin_add_env_hooks(99_px4_setup
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+  SHELLS sh)
+
 #############
 ## Testing ##
 #############
