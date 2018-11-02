@@ -1,6 +1,6 @@
 <launch>
   <arg name="mavros" default="false" />
-  <arg name="config" default="posix-configs/SITL/init/ekf2/iris"/>
+  <arg name="config" default="etc/init.d-posix/rcS"/>
   <node
   name="px4_instance"
   pkg="sitl_launcher"
