@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES qgroundcontrol
-#  CATKIN_DEPENDS libfuse2 libsdl2 tar unzip
+#  CATKIN_DEPENDS tar unzip
 #  DEPENDS system_lib
 )
 

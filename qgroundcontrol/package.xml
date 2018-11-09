@@ -32,8 +32,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>tar</build_depend>
   <build_depend>unzip</build_depend>
-  <!-- <exec_depend>libfuse2</exec_depend>
-  <exec_depend>libsdl2</exec_depend> -->
+  <exec_depend>sdl2</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
