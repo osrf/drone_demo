@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>qgroundcontrol</name>
+  <version>0.0.0</version>
+  <description>The qgroundcontrol package</description>
+
+  <!-- One maintainer tag required, multiple allowed, one person per tag -->
+  <!-- Example:  -->
+  <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
+  <maintainer email="tfoote@osrfoundation.org">Tully Foote</maintainer>
+
+
+  <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <license>Apache2 / GPLv3</license>
+
+
+  <!-- Url tags are optional, but multiple are allowed, one per tag -->
+  <!-- Optional attribute type can be: website, bugtracker, or repository -->
+  <!-- Example: -->
+  <url type="website">https://dev.qgroundcontrol.com</url>
+
+
+  <!-- Author tags are optional, multiple are allowed, one per tag -->
+  <!-- Authors do not have to be maintainers, but could be -->
+  <!-- Example: -->
+  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
+
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>tar</build_depend>
+  <build_depend>unzip</build_depend>
+  <!-- <exec_depend>libfuse2</exec_depend>
+  <exec_depend>libsdl2</exec_depend> -->
+
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>
