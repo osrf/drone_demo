@@ -1,5 +1,5 @@
 #!/bin/sh
 
-. /tmp/drone_demo/install/setup.sh
+. /home/developer/drone_demo/install/setup.sh
 
 exec "$@"

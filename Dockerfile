@@ -44,14 +44,20 @@ RUN apt-get update \
  && apt-get clean
 
 
+# ARG user_id	
+# RUN useradd -U --uid ${user_id} -ms /bin/bash $USERNAME \	
+ENV USERNAME developer	
+RUN useradd -U -ms /bin/bash $USERNAME \	
+ && echo "$USERNAME:$USERNAME" | chpasswd \	
+ && adduser $USERNAME sudo \	
+ && echo "$USERNAME ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
 
 
-
-RUN mkdir /tmp/drone_demo/src     -p
-WORKDIR /tmp/drone_demo/src
+RUN mkdir /home/$USERNAME/drone_demo/src     -p
+WORKDIR /home/$USERNAME/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b updates
 RUN git clone https://github.com/PX4/sitl_gazebo.git --recursive
-WORKDIR /tmp/drone_demo
+WORKDIR /home/$USERNAME/drone_demo
 RUN . /opt/ros/kinetic/setup.sh && rosdep update && rosdep install --from-path src -iy
 RUN . /opt/ros/kinetic/setup.sh && catkin config --install
 RUN . /opt/ros/kinetic/setup.sh && catkin build
