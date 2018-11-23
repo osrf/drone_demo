@@ -44,24 +44,14 @@ RUN apt-get update \
  && apt-get clean
 
 
-# Add a user with the same user_id as the user outside the container
-# Requires a docker build argument `user_id`
-ARG user_id
-ENV USERNAME developer
-RUN useradd -U --uid ${user_id} -ms /bin/bash $USERNAME \
- && echo "$USERNAME:$USERNAME" | chpasswd \
- && adduser $USERNAME sudo \
- && echo "$USERNAME ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
-
-# Commands below run as the developer user
-USER $USERNAME
 
 
-RUN mkdir /home/$USERNAME/drone_demo/src     -p
-WORKDIR /home/$USERNAME/drone_demo/src
+
+RUN mkdir /tmp/drone_demo/src     -p
+WORKDIR /tmp/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b updates
 RUN git clone https://github.com/PX4/sitl_gazebo.git --recursive
-WORKDIR /home/$USERNAME/drone_demo
+WORKDIR /tmp/drone_demo
 RUN . /opt/ros/kinetic/setup.sh && rosdep update && rosdep install --from-path src -iy
 RUN . /opt/ros/kinetic/setup.sh && catkin config --install
 RUN . /opt/ros/kinetic/setup.sh && catkin build
