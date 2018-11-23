@@ -15,7 +15,7 @@ RUN /bin/sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) 
 #  && wget http://packages.osrfoundation.org/gazebo.key -O - | apt-key add -' \
  && apt-get update \
  && apt-get install -y \
-    ros-kinetic-desktop-full \
+    ros-kinetic-gazebo-ros-pkgs \
     gazebo7 \
     libgazebo7-dev \
     python-catkin-tools \
