@@ -52,7 +52,7 @@ RUN useradd -U -ms /bin/bash $USERNAME \
  && adduser $USERNAME sudo \	
  && echo "$USERNAME ALL=NOPASSWD: ALL" >> /etc/sudoers.d/$USERNAME
 
-
+USER $USERNAME
 RUN mkdir /home/$USERNAME/drone_demo/src     -p
 WORKDIR /home/$USERNAME/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b updates
