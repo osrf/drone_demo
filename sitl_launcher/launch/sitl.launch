@@ -13,6 +13,7 @@
   <arg name="respawn_gazebo" default="false"/>
   <arg name="use_clock_frequency" default="false"/>
   <arg name="pub_clock_frequency" default="100"/>
+  <arg name="px4_model" default="iris"/><!-- UNUSED suppressing warning for now-->
 
   <!-- set use_sim_time flag -->
   <param name="/use_sim_time" value="$(arg use_sim_time)"/>

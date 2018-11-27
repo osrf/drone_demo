@@ -2,6 +2,9 @@
 
 set -e
 
+# Argument 1 rc_script
+# Argument 2 px4_sim_model
+
 tempdir=`mktemp -d`
 echo "temporary rootfs: $tempdir"
 
@@ -14,7 +17,7 @@ echo "px4 dir detected: $px4dir"
 
 cp -R ${px4dir}/* $tempdir
 
-export PX4_SIM_MODEL=iris
+export PX4_SIM_MODEL=$2
 
 cd $tempdir
 rc_script=$1

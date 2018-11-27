@@ -1,11 +1,12 @@
 <launch>
   <arg name="mavros" default="false" />
   <arg name="config" default="etc/init.d-posix/rcS"/>
+  <arg name="px4_model" default="iris"/>
   <node
   name="px4_instance"
   pkg="sitl_launcher"
   type="run_px4.sh"
-  args="$(arg config)"
+  args="$(arg config) $(arg px4_model)"
   cwd="node"
   output="screen" />
   <include if="$(arg mavros)" file="$(find mavros)/launch/px4.launch">
