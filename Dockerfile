@@ -57,6 +57,8 @@ RUN mkdir /home/$USERNAME/drone_demo/src     -p
 WORKDIR /home/$USERNAME/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b updates
 RUN git clone https://github.com/PX4/sitl_gazebo.git --recursive
+# Pin sitl_gazebo until the matching change is out in debian packages. See discussion https://github.com/PX4/sitl_gazebo/pull/250
+RUN cd sitl_gazebo && git checkout b05b6d5735068b7cf85bb9b529f5fa1318e1810a
 WORKDIR /home/$USERNAME/drone_demo
 RUN . /opt/ros/kinetic/setup.sh && rosdep update && rosdep install --from-path src -iy
 RUN . /opt/ros/kinetic/setup.sh && catkin config --install
