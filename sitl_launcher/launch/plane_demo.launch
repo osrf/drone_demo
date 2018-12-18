@@ -13,7 +13,7 @@
   <arg name="respawn_gazebo" default="false"/>
   <arg name="use_clock_frequency" default="false"/>
   <arg name="pub_clock_frequency" default="100"/>
-  <arg name="px4_model" default="plane"/>
+  <arg name="mavros" default="false"/>
 
 
   <!-- set use_sim_time flag -->
@@ -34,6 +34,7 @@
 
 <include file="$(find sitl_launcher)/launch/run_px4.launch">
   <arg name="px4_model" value="$(arg px4_model)"/>
+  <arg name="mavros" value="$(arg mavros)"/>
 </include>
 
  <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen"/>
