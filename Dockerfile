@@ -25,7 +25,19 @@ RUN apt-get update \
     ros-kinetic-mavros \
     unzip \
     python-toml \
+    speech-dispatcher \
  && apt-get clean
+
+# optional dependency for qgc 
+RUN apt-get update \
+ && apt-get install -y \
+    speech-dispatcher \
+ && apt-get clean
+
+
+ # Install geographic lib dataset, it should be in a post install hook, but isn't 
+ # https://github.com/mavlink/mavros/issues/1005
+RUN sh /opt/ros/kinetic/lib/mavros/install_geographiclib_datasets.sh
 
 # workspace development helpers
 RUN apt-get update \
