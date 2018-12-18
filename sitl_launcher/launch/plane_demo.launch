@@ -13,6 +13,7 @@
   <arg name="respawn_gazebo" default="false"/>
   <arg name="use_clock_frequency" default="false"/>
   <arg name="pub_clock_frequency" default="100"/>
+  <arg name="px4_model" default="plane"/>
   <arg name="mavros" default="false"/>
 
 
