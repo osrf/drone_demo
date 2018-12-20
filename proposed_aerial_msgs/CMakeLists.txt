@@ -10,6 +10,7 @@ project(proposed_aerial_msgs)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -54,7 +55,7 @@ add_message_files(
   GlobalWaypoints.msg
   LinearAcceleration.msg
   MavlinkAnnotatedWaypoints.msg
-  MavlinkeWaypointParameters.msg
+  MavlinkWaypointParameters.msg
   UpperTriangularCovariance.msg
   UpperTriangularCovariance3.msg
 )
@@ -74,10 +75,10 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   geometry_msgs#   sensor_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs#   sensor_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -112,7 +113,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES proposed_aerial_msgs
 #  CATKIN_DEPENDS geometry_msgs sensor_msgs
-#  DEPENDS system_lib
+ DEPENDS message_runtime
 )
 
 ###########
