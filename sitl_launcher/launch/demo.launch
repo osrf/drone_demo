@@ -38,6 +38,6 @@
   <arg name="mavros" value="$(arg mavros)"/>
 </include>
 
- <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen"/>
+ <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen" required="true"/>
 
 </launch>
