@@ -57,6 +57,7 @@ add_message_files(
   LinearAcceleration.msg
   MavlinkAnnotatedWaypoints.msg
   MavlinkWaypointParameters.msg
+  OdometryWithAcceleration.msg
   UpperTriangularCovariance.msg
   UpperTriangularCovariance3.msg
 )
