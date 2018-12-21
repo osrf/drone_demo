@@ -2,7 +2,16 @@
 <package format="2">
   <name>proposed_aerial_msgs</name>
   <version>0.0.0</version>
-  <description>The proposed_aerial_msgs package</description>
+  <description>The proposed_aerial_msgs package
+  
+  This contains the aggregate proposed messages to be tested before being accepted upstream into repositories like common_msgs.
+  Once proven here they can be then merged there.
+
+  In particular they are implementing proposed messages from:
+   - REP 147 proposal: https://github.com/ros-infrastructure/rep/pull/120
+   - REP 145 proposal: https://github.com/ros-infrastructure/rep/pull/186
+  
+  </description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
