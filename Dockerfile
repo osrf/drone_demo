@@ -40,7 +40,7 @@ RUN apt-get update \
 
  # Install geographic lib dataset, it should be in a post install hook, but isn't 
  # https://github.com/mavlink/mavros/issues/1005
-RUN sh /opt/ros/kinetic/lib/mavros/install_geographiclib_datasets.sh
+RUN bash /opt/ros/kinetic/lib/mavros/install_geographiclib_datasets.sh
 
 RUN mkdir /workspace/drone_demo/src     -p
 WORKDIR /workspace/drone_demo/src
