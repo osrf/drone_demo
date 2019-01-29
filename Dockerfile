@@ -31,10 +31,12 @@ RUN apt-get update \
     speech-dispatcher \
  && apt-get clean
 
-# optional dependency for qgc 
+# optional dependency for qgc
 RUN apt-get update \
  && apt-get install -y \
     speech-dispatcher \
+    libimage-exiftool-perl \
+    gstreamer1.0-libav \
  && apt-get clean
 
 
