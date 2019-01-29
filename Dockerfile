@@ -47,7 +47,7 @@ RUN bash /opt/ros/kinetic/lib/mavros/install_geographiclib_datasets.sh
 RUN mkdir /workspace/drone_demo/src     -p
 WORKDIR /workspace/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b updates
-RUN git clone https://github.com/PX4/sitl_gazebo.git --recursive
+RUN git clone https://github.com/tfoote/sitl_gazebo.git -b enable_video_streaming --recursive
 
 WORKDIR /workspace/drone_demo
 
