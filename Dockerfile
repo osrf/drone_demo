@@ -44,10 +44,10 @@ RUN apt-get update \
  # https://github.com/mavlink/mavros/issues/1005
 RUN bash /opt/ros/kinetic/lib/mavros/install_geographiclib_datasets.sh
 
-RUN mkdir /workspace/drone_demo/src     -p
+RUN mkdir /workspace/drone_demo/src -p
 WORKDIR /workspace/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b updates
-RUN git clone https://github.com/tfoote/sitl_gazebo.git -b enable_video_streaming --recursive
+RUN git clone https://github.com/tfoote/sitl_gazebo.git -b plane_video --recursive
 
 WORKDIR /workspace/drone_demo
 
