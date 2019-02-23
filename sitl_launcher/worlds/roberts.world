@@ -90,6 +90,8 @@
             </script>
           </material>
         </visual>
+      </link>
+    </model>
     <gui>
       <camera name="camera">
         <pose>445 257 85 0 0.19 0.73</pose>
