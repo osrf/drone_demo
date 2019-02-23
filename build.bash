@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -x
 
 
 # get path to current directory
