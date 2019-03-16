@@ -16,6 +16,11 @@
   <arg name="pub_clock_frequency" default="100"/>
   <arg name="px4_model" default="iris"/><!-- UNUSED suppressing warning for now-->
 
+  <arg name="px4_set_home" default="false"/>
+  <arg name="px4_home_lat" default="37.733249"/>
+  <arg name="px4_home_lon" default="-119.561883"/>
+  <arg name="px4_home_alt" default="2800.4"/>
+
   <!-- set use_sim_time flag -->
   <param name="/use_sim_time" value="$(arg use_sim_time)"/>
 
@@ -34,7 +39,11 @@
     <param name="gazebo/pub_clock_frequency" value="$(arg pub_clock_frequency)" />
   </group>
   <node name="gazebo" pkg="gazebo_ros" type="$(arg script_type)" respawn="$(arg respawn_gazebo)" output="screen"
-	args="$(arg command_arg1) $(arg command_arg2) $(arg command_arg3) -e $(arg physics) $(arg extra_gazebo_args) $(arg world_name)" />
+	args="$(arg command_arg1) $(arg command_arg2) $(arg command_arg3) -e $(arg physics) $(arg extra_gazebo_args) $(arg world_name)">
+    <env name="PX4_HOME_LAT" value="$(arg px4_home_lat)" if="$(arg px4_set_home)"/>
+    <env name="PX4_HOME_LON" value="$(arg px4_home_lat)" if="$(arg px4_set_home)"/>
+    <env name="PX4_HOME_ALT" value="$(arg px4_home_lat)" if="$(arg px4_set_home)"/>
+  </node>
 	
   <!-- start gazebo client -->
   <group if="$(arg gui)">
