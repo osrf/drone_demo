@@ -41,8 +41,8 @@
   <node name="gazebo" pkg="gazebo_ros" type="$(arg script_type)" respawn="$(arg respawn_gazebo)" output="screen"
 	args="$(arg command_arg1) $(arg command_arg2) $(arg command_arg3) -e $(arg physics) $(arg extra_gazebo_args) $(arg world_name)">
     <env name="PX4_HOME_LAT" value="$(arg px4_home_lat)" if="$(arg px4_set_home)"/>
-    <env name="PX4_HOME_LON" value="$(arg px4_home_lat)" if="$(arg px4_set_home)"/>
-    <env name="PX4_HOME_ALT" value="$(arg px4_home_lat)" if="$(arg px4_set_home)"/>
+    <env name="PX4_HOME_LON" value="$(arg px4_home_lon)" if="$(arg px4_set_home)"/>
+    <env name="PX4_HOME_ALT" value="$(arg px4_home_alt)" if="$(arg px4_set_home)"/>
   </node>
 	
   <!-- start gazebo client -->
