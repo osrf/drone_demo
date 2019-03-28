@@ -157,6 +157,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 install(PROGRAMS
   scripts/run_px4.sh
+  scripts/launch_drone
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
