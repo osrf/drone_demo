@@ -5,9 +5,11 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from io import StringIO
+from distutils.dir_util import copy_tree
 import math
 import os
 import re
+import subprocess
 import sys
 import tempfile
 
@@ -17,9 +19,11 @@ from gazebo_msgs.srv import DeleteModelRequest
 from gazebo_msgs.srv import SpawnModel
 from gazebo_msgs.srv import SpawnModelRequest
 from rosgraph import ROS_MASTER_URI
+from rospkg import RosPack
 from rospy import ServiceProxy
 from rospy import myargv as rospy_myargv
 from rospy import wait_for_service
+
 
 def spawn_model(model_name, model_xml,
     pose, ros_master_uri=None, robot_namespace=None, debug=True,
@@ -62,20 +66,59 @@ def spawn_model(model_name, model_xml,
         print(resp.status_message, file=sys.stderr)
         return 1
 
+
+def get_px4_dir():
+    rp = RosPack()
+    return rp.get_path('px4')
+
+
+def seed_rootfs(rootfs):
+    px4_dir = get_px4_dir()
+    copy_tree(px4_dir, rootfs)
+
+
+def run_px4(rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', rootfs=None):
+    """ Replacing run_px4.sh
+    rc_script is the path to the rc_script to run
+    px4_sim_model is the model
+    if rootfs is set use that for the rootfs, otherwise run in a temporary directory.
+    """
+    if not rootfs:
+        with tempfile.TemporaryDirectory() as tempdir:
+            return run_px4(rc_script, px4_sim_model, tempdir)
+
+    print("using rootfs ", rootfs)
+    seed_rootfs(rootfs)
+
+    cmd = ['px4', '%s/ROMFS/px4fmu_common' % rootfs, 
+           '-s', rc_script,
+           '-d']
+    print("running px4 with command: ", cmd)
+    subprocess_env = os.environ.copy()
+    subprocess_env['PX4_SIM_MODEL'] = px4_sim_model
+    subprocess.check_call(
+        cmd,
+        cwd=rootfs,
+        env=subprocess_env)
+
+
 def spawn_typhooon():
     with open('/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf') as fh:
         model_xml = fh.read()
     spawn_model('typhoon_h480', model_xml, (0,0,0))
+
 
 def spawn_iris():
     with open('/home/osrf/diux/src/sitl_gazebo/models/iris_fpv_cam/iris_fpv_cam.sdf') as fh:
         model_xml = fh.read()
     spawn_model('iris', model_xml, (0,0,0))
 
+
 def spawn_plane():
     with open('/home/osrf/diux/src/sitl_gazebo/models/plane_cam/plane_cam.sdf') as fh:
         model_xml = fh.read()
     spawn_model('plane', model_xml, (0,0,0))
+
 
 def main():
     SUPPORTED_DRONE_TYPES=['typhoon_h480', 'iris', 'plane']
@@ -92,6 +135,7 @@ def main():
         spawn_iris()
     elif args.drone_type == 'plane':
         spawn_plane()
+    run_px4('etc/init.d-posix/rcS', args.drone_type)
 
 if __name__ == '__main__':
     main()
