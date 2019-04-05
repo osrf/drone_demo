@@ -101,23 +101,22 @@ def run_px4(rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', rootfs=None)
         cwd=rootfs,
         env=subprocess_env)
 
-
-def spawn_typhooon():
-    with open('/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf') as fh:
-        model_xml = fh.read()
-    spawn_model('typhoon_h480', model_xml, (0,0,0))
-
-
-def spawn_iris():
-    with open('/home/osrf/diux/src/sitl_gazebo/models/iris_fpv_cam/iris_fpv_cam.sdf') as fh:
-        model_xml = fh.read()
-    spawn_model('iris', model_xml, (0,0,0))
+model_files = {
+    'iris': '/home/osrf/diux/src/sitl_gazebo/models/iris_fpv_cam/iris_fpv_cam.sdf',
+    'plane': '/home/osrf/diux/src/sitl_gazebo/models/plane_cam/plane_cam.sdf',
+    'typhoon': '/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf',
+}
 
 
-def spawn_plane():
-    with open('/home/osrf/diux/src/sitl_gazebo/models/plane_cam/plane_cam.sdf') as fh:
-        model_xml = fh.read()
-    spawn_model('plane', model_xml, (0,0,0))
+class Drone:
+    def __init__(self, drone_type):
+        assert drone_type in model_files.keys()
+        with open(model_files[drone_type]) as fh:
+            self.xml = fh.read()
+
+def spawn_drone(drone_type):
+    model = Drone(drone_type)
+    spawn_model(drone_type, model.xml, (0,0,0))
 
 
 def main():
@@ -129,12 +128,7 @@ def main():
     myargv = rospy_myargv(argv=sys.argv)[1:]
     print("myargv", myargv)
     args = parser.parse_args(args=myargv)
-    if args.drone_type == 'typhoon_h480':
-        spawn_typhooon()
-    elif args.drone_type == 'iris':
-        spawn_iris()
-    elif args.drone_type == 'plane':
-        spawn_plane()
+    spawn_drone(args.drone_type)
     run_px4('etc/init.d-posix/rcS', args.drone_type)
 
 if __name__ == '__main__':
