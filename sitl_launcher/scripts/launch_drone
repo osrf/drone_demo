@@ -108,16 +108,25 @@ model_files = {
     'typhoon': '/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf',
 }
 
+starting_poses={
+    0: (0,0,0),
+    1: (0,1,0),
+    2: (0,2,0),
+    3: (0,3,0),
+}
+
 
 class Drone:
-    def __init__(self, drone_type):
+    def __init__(self, drone_type, pose=(0,0,0)):
+        self.pose = pose
+
         assert drone_type in model_files.keys()
         self.drone_type = drone_type
         with open(model_files[drone_type]) as fh:
             self.xml = fh.read()
 
     def spawn(self):
-        spawn_model(self.drone_type, self.xml, (0,0,0))
+        spawn_model(self.drone_type, self.xml, self.pose)
 
     
     def wait(self):
@@ -145,11 +154,12 @@ def main():
 
     parser = argparse.ArgumentParser(description='Spawn a drone')
     parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
+    parser.add_argument('--pose-id', help="What position to start in", choices=range(0,3), default=1)
 
     myargv = rospy_myargv(argv=sys.argv)[1:]
     print("myargv", myargv)
     args = parser.parse_args(args=myargv)
-    drone = Drone(args.drone_type)
+    drone = Drone(args.drone_type, starting_poses[args.pose_id])
     with drone as d:
         d.wait()
         print("exiting")
