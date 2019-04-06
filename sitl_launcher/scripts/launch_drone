@@ -77,14 +77,14 @@ def seed_rootfs(rootfs):
     copy_tree(px4_dir, rootfs)
 
 
-def run_px4(rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', rootfs=None):
+def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris'):
     """ Replacing run_px4.sh
     rc_script is the path to the rc_script to run
     px4_sim_model is the model
     if rootfs is set use that for the rootfs, otherwise run in a temporary directory.
     """
     if not rootfs:
-        with tempfile.TemporaryDirectory() as tempdir:
+
             return run_px4(rc_script, px4_sim_model, tempdir)
 
     print("using rootfs ", rootfs)
@@ -96,10 +96,11 @@ def run_px4(rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', rootfs=None)
     print("running px4 with command: ", cmd)
     subprocess_env = os.environ.copy()
     subprocess_env['PX4_SIM_MODEL'] = px4_sim_model
-    subprocess.check_call(
+    child = subprocess.Popen(
         cmd,
         cwd=rootfs,
         env=subprocess_env)
+    return child
 
 model_files = {
     'iris': '/home/osrf/diux/src/sitl_gazebo/models/iris_fpv_cam/iris_fpv_cam.sdf',
@@ -111,13 +112,33 @@ model_files = {
 class Drone:
     def __init__(self, drone_type):
         assert drone_type in model_files.keys()
+        self.drone_type = drone_type
         with open(model_files[drone_type]) as fh:
             self.xml = fh.read()
 
-def spawn_drone(drone_type):
-    model = Drone(drone_type)
-    spawn_model(drone_type, model.xml, (0,0,0))
+    def spawn(self):
+        spawn_model(self.drone_type, self.xml, (0,0,0))
 
+    
+    def wait(self):
+        if self.autopilot_process:
+            self.autopilot_process.wait()
+
+    def __enter__(self):
+        self.spawn()
+        self.rootfs = tempfile.TemporaryDirectory()
+        self.autopilot_process = run_px4(self.rootfs.name, 'etc/init.d-posix/rcS', self.drone_type)
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if exc_type is KeyboardInterrupt:
+            print("Caught keyboard interrupt tearing down")
+        self.autopilot_process.terminate()
+        self.autopilot_process.wait()
+        self.rootfs.cleanup()
+        if exc_type is KeyboardInterrupt:
+            return True
+        # TODO(tfoote) unspawn
 
 def main():
     SUPPORTED_DRONE_TYPES=['typhoon_h480', 'iris', 'plane']
@@ -128,8 +149,10 @@ def main():
     myargv = rospy_myargv(argv=sys.argv)[1:]
     print("myargv", myargv)
     args = parser.parse_args(args=myargv)
-    spawn_drone(args.drone_type)
-    run_px4('etc/init.d-posix/rcS', args.drone_type)
+    drone = Drone(args.drone_type)
+    with drone as d:
+        d.wait()
+        print("exiting")
 
 if __name__ == '__main__':
     main()
