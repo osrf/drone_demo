@@ -107,6 +107,11 @@ model_files = {
     'plane': '/home/osrf/diux/src/sitl_gazebo/models/plane_cam/plane_cam.sdf',
     'typhoon': '/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf',
 }
+valid_models = {
+    'iris': 'rosrun xacro xacro %(description_path)s/urdf/%(drone_type)s_base.xacro rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s --inorder',
+    'plane': 'rosrun xacro xacro %(description_path)s/urdf/%(drone_type)s_base.xacro rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s --inorder',
+    'typhoon_h480': 'rosrun xacro xacro %(description_path)s/urdf/%(drone_type)s_base.xacro rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s --inorder',
+}
 
 starting_poses={
     0: (0,0,0),
@@ -117,13 +122,23 @@ starting_poses={
 
 
 class Drone:
-    def __init__(self, drone_type, pose=(0,0,0)):
+    def __init__(self, drone_type, pose=(0,0,0), vehicle_id=0):
         self.pose = pose
+        assert vehicle_id <= 10
 
-        assert drone_type in model_files.keys()
+        import rospkg
+        rp = rospkg.RosPack()
+        description_path = os.path.join(rp.get_path('mavlink_sitl_gazebo'), 'models/rotors_description')
+        arguments = {
+            'description_path': description_path,
+            'drone_type': drone_type,
+            'mavlink_tcp_port': 4560 + vehicle_id,
+            'mavlink_udp_port': 14560 + vehicle_id,
+        }
+
+        assert drone_type in valid_models.keys()
         self.drone_type = drone_type
-        with open(model_files[drone_type]) as fh:
-            self.xml = fh.read()
+        self.xml = subprocess.check_output(valid_models[drone_type] % arguments, shell=True).decode('utf-8')
 
     def spawn(self):
         spawn_model(self.drone_type, self.xml, self.pose)
