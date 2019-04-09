@@ -66,6 +66,30 @@ def spawn_model(model_name, model_xml,
         print(resp.status_message, file=sys.stderr)
         return 1
 
+def delete_model(model_name, ros_master_uri=None, robot_namespace=None,
+    service_name='/gazebo/delete_model'):
+
+    if ros_master_uri:
+        original_uri = os.environ[ROS_MASTER_URI]
+        os.environ[ROS_MASTER_URI] = ros_master_uri
+    wait_for_service(service_name)
+    srv = ServiceProxy(service_name, DeleteModel)
+
+    req = DeleteModelRequest()
+    req.model_name = model_name
+ 
+    resp = srv(req)
+
+    if ros_master_uri:
+        os.environ[ROS_MASTER_URI] = original_uri
+
+    if resp.success:
+        print(resp.status_message, '(%s)' % model_name)
+        return 0
+    else:
+        print(resp.status_message, file=sys.stderr)
+        return 1
+
 
 def get_px4_dir():
     rp = RosPack()
@@ -77,8 +101,8 @@ def seed_rootfs(rootfs):
     copy_tree(px4_dir, rootfs)
 
 
-def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris'):
-    """ Replacing run_px4.sh
+def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehicle_id='0'):
+    """ Replacing run_px4.sh'
     rc_script is the path to the rc_script to run
     px4_sim_model is the model
     if rootfs is set use that for the rootfs, otherwise run in a temporary directory.
@@ -92,6 +116,7 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris'):
 
     cmd = ['px4', '%s/ROMFS/px4fmu_common' % rootfs, 
            '-s', rc_script,
+           '-i', vehicle_id,
            '-d']
     print("running px4 with command: ", cmd)
     subprocess_env = os.environ.copy()
@@ -114,35 +139,39 @@ valid_models = {
 }
 
 starting_poses={
-    0: (0,0,0),
-    1: (0,1,0),
-    2: (0,2,0),
-    3: (0,3,0),
+    '0': (0,0,0),
+    '1': (0,1,0),
+    '2': (0,2,0),
+    '3': (0,3,0),
 }
 
 
 class Drone:
-    def __init__(self, drone_type, pose=(0,0,0), vehicle_id=0):
+    def __init__(self, drone_type, pose=(0,0,0), vehicle_id='0'):
+        assert drone_type in valid_models.keys()
+        self.drone_type = drone_type
         self.pose = pose
-        assert vehicle_id <= 10
+        self.vehicle_id = vehicle_id
+        self.vehicle_name = self.drone_type+'_%s' % self.vehicle_id
+        assert int(vehicle_id) <= 10
 
         import rospkg
         rp = rospkg.RosPack()
         description_path = os.path.join(rp.get_path('mavlink_sitl_gazebo'), 'models/rotors_description')
-        arguments = {
+        self.arguments = {
             'description_path': description_path,
             'drone_type': drone_type,
-            'mavlink_tcp_port': 4560 + vehicle_id,
-            'mavlink_udp_port': 14560 + vehicle_id,
+            'mavlink_tcp_port': 4560 + int(vehicle_id),
+            'mavlink_udp_port': 14560 + int(vehicle_id),
         }
 
-        assert drone_type in valid_models.keys()
-        self.drone_type = drone_type
-        self.xml = subprocess.check_output(valid_models[drone_type] % arguments, shell=True).decode('utf-8')
+        self.xml = subprocess.check_output(valid_models[drone_type] % self.arguments, shell=True).decode('utf-8')
 
     def spawn(self):
-        spawn_model(self.drone_type, self.xml, self.pose)
+        spawn_model(self.vehicle_name, self.xml, self.pose)
 
+    def unspawn(self):
+        delete_model(self.vehicle_name)
     
     def wait(self):
         if self.autopilot_process:
@@ -151,15 +180,20 @@ class Drone:
     def __enter__(self):
         self.spawn()
         self.rootfs = tempfile.TemporaryDirectory()
-        self.autopilot_process = run_px4(self.rootfs.name, 'etc/init.d-posix/rcS', self.drone_type)
+        self.autopilot_process = run_px4(self.rootfs.name, 'etc/init.d-posix/rcS', self.drone_type, self.vehicle_id)
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if exc_type is KeyboardInterrupt:
             print("Caught keyboard interrupt tearing down")
+        print("Stopping Autopilot")
         self.autopilot_process.terminate()
         self.autopilot_process.wait()
         self.rootfs.cleanup()
+        print('Cleaned up autopilot %s' % self.vehicle_id)
+        print('Deleting Model %s' % self.vehicle_name)
+        self.unspawn()
+        print('Finished deleting model')
         if exc_type is KeyboardInterrupt:
             return True
         # TODO(tfoote) unspawn
@@ -169,12 +203,12 @@ def main():
 
     parser = argparse.ArgumentParser(description='Spawn a drone')
     parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
-    parser.add_argument('--pose-id', help="What position to start in", choices=range(0,3), default=1)
+    parser.add_argument('--pose-id', help="What position to start in", choices=['0','1','2','3'], default='0', type=str)
 
     myargv = rospy_myargv(argv=sys.argv)[1:]
     print("myargv", myargv)
     args = parser.parse_args(args=myargv)
-    drone = Drone(args.drone_type, starting_poses[args.pose_id])
+    drone = Drone(args.drone_type, starting_poses[args.pose_id], args.pose_id)
     with drone as d:
         d.wait()
         print("exiting")
