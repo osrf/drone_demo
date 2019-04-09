@@ -133,7 +133,7 @@ model_files = {
     'typhoon': '/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf',
 }
 valid_models = {
-    'iris': 'rosrun xacro xacro %(description_path)s/urdf/%(drone_type)s_base.xacro rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s --inorder',
+    'iris': 'rosrun xacro xacro %(description_path)s/iris/%(drone_type)s.sdf.xacro rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s --inorder',
     'plane': 'rosrun xacro xacro %(description_path)s/urdf/%(drone_type)s_base.xacro rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s --inorder',
     'typhoon_h480': 'rosrun xacro xacro %(description_path)s/urdf/%(drone_type)s_base.xacro rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s --inorder',
 }
@@ -157,7 +157,7 @@ class Drone:
 
         import rospkg
         rp = rospkg.RosPack()
-        description_path = os.path.join(rp.get_path('mavlink_sitl_gazebo'), 'models/rotors_description')
+        description_path = os.path.join(rp.get_path('mavlink_sitl_gazebo'), 'models')
         self.arguments = {
             'description_path': description_path,
             'drone_type': drone_type,
