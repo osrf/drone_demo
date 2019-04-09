@@ -194,9 +194,11 @@ class Drone:
         self.autopilot_process.wait()
         self.rootfs.cleanup()
         print('Cleaned up autopilot %s' % self.vehicle_id)
-        print('Deleting Model %s' % self.vehicle_name)
-        self.unspawn()
-        print('Finished deleting model')
+        print('Skipping model unload due to crashes')
+        # TODO(tfoote) unloading leads to crashes that needs to be debugged
+        # print('Deleting Model %s' % self.vehicle_name)
+        # self.unspawn()
+        # print('Finished deleting model')
         if exc_type is KeyboardInterrupt:
             return True
         # TODO(tfoote) unspawn
