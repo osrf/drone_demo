@@ -133,7 +133,7 @@ model_files = {
     'typhoon': '/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf',
 }
 
-xacro_args = 'rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s --inorder'
+xacro_args = 'rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s --inorder'
 valid_models = {
     'iris': 'rosrun xacro xacro %(description_path)s/iris/%(drone_type)s.sdf.xacro ' + xacro_args,
     'plane': 'rosrun xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args,
@@ -165,6 +165,7 @@ class Drone:
             'drone_type': drone_type,
             'mavlink_tcp_port': 4560 + int(vehicle_id),
             'mavlink_udp_port': 14560 + int(vehicle_id),
+            'camera_control_udp_port': 14530 + int(vehicle_id),
             'camera_udp_port': 5600 + int(vehicle_id),
         }
 
