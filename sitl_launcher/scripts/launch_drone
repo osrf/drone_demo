@@ -5,6 +5,7 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from io import StringIO
+from contextlib import ExitStack
 from distutils.dir_util import copy_tree
 import math
 import os
@@ -204,20 +205,47 @@ class Drone:
             return True
         # TODO(tfoote) unspawn
 
+def run_drones(drones):
+    with ExitStack() as stack:
+        for id, drone in drones.items():
+            print("starting %s" % id)
+            stack.enter_context(drone)
+        for id, drone in drones.items():
+            print("waiting on %s" % id)
+            drone.wait()
+
+
 def main():
     SUPPORTED_DRONE_TYPES=['typhoon_h480', 'iris', 'plane']
 
     parser = argparse.ArgumentParser(description='Spawn a drone')
-    parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
-    parser.add_argument('--pose-id', help="What position to start in", choices=['0','1','2','3'], default='0', type=str)
+    # parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
+    parser.add_argument('--iris', help="What position to start irises in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
+    parser.add_argument('--plane', help="What position to start planes in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
+    parser.add_argument('--typhoon', help="What position to start typhoons in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
 
     myargv = rospy_myargv(argv=sys.argv)[1:]
     print("myargv", myargv)
     args = parser.parse_args(args=myargv)
-    drone = Drone(args.drone_type, starting_poses[args.pose_id], args.pose_id)
-    with drone as d:
-        d.wait()
-        print("exiting")
+
+    overlap = set(args.iris) & set(args.plane)
+    if overlap:
+        parser.error("iris and plane poses cannot overlap %s" % overlap)
+    overlap = set(args.iris) & set(args.typhoon)
+    if overlap:
+        parser.error("iris and typhoon poses cannot overlap %s" % overlap)
+    overlap = set(args.typhoon) & set(args.plane)
+    if overlap:
+        parser.error("typhoon and plane poses cannot overlap %s" % overlap)
+
+    drones = {}
+    for id in args.iris:
+        drones[id] = Drone('iris', starting_poses[id], id)
+    for id in args.plane:
+        drones[id] = Drone('plane', starting_poses[id], id)
+    for id in args.typhoon:
+        drones[id] = Drone('typhoon_h480', starting_poses[id], id)
+    run_drones(drones)
 
 if __name__ == '__main__':
     main()
