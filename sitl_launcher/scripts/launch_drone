@@ -215,6 +215,58 @@ def run_drones(drones):
             drone.wait()
 
 
+class DroneSelector:
+
+    def __init__(self):
+        from tkinter import Tk, Button, Label, StringVar
+        from tkinter.ttk import Combobox
+
+        self.type_map = {'iris': 2, 'plane': 3, 'typhoon_h480': 4}
+
+        self.window = Tk()
+        self.window.title("Please select the drones you want to launch")
+        self.lbl = Label(self.window, text="Please select the number of drones you want to launch.")
+        self.lbl.grid(column=0, row=0, columnspan=2)
+        self.btn = Button(self.window, text="Done Selecting", command=self._close_window)
+        self.btn.grid(column=0, row=5, columnspan=2)
+
+        self.labels = {}
+        self.combos = {}
+        self.defaults = {}
+        for t, r in self.type_map.items():
+            self.defaults[t] = StringVar()
+            self.defaults[t].set('0')
+            self.labels[t] = Label(self.window, text="%s: " %t)
+            self.labels[t].grid(column=0, row=r, sticky='E')
+            self.combos[t] = Combobox(self.window, textvariable=self.defaults[t], state='readonly')
+            self.combos[t].grid(column=1, row=r)
+            self.combos[t]['values']= (0, 1, 2, 3, 4)
+
+    def get_drones(self):
+        drones = {}
+        id = 0
+        for t in self.type_map.keys():
+            type_combo = self.combos[t].get()
+            print("Selected %s: %s" % (t, type_combo))
+            type_count = int(type_combo)
+            for counter in range(type_count):
+                #TODO(tfoote) do better range checking to prevent
+                id_str = str(id)
+                if id_str not in starting_poses:
+                    print("error cannot provision more drone %s, no starting pose defined" % id_str)
+                    sys.exit()
+                drones[id_str] = Drone(t, starting_poses[id_str], id_str)
+                id += 1
+        self.drones = drones
+
+    def _close_window(self):
+        self.get_drones()
+        self.window.destroy()
+
+    def mainloop(self):
+
+        self.window.mainloop()
+
 def main():
     SUPPORTED_DRONE_TYPES=['typhoon_h480', 'iris', 'plane']
 
@@ -239,6 +291,12 @@ def main():
         parser.error("typhoon and plane poses cannot overlap %s" % overlap)
 
     drones = {}
+    if not (args.iris + args.plane + args.typhoon):
+        ds = DroneSelector()
+        ds.mainloop()
+        drones = ds.drones
+        print("DRONES is", drones)
+
     for id in args.iris:
         drones[id] = Drone('iris', starting_poses[id], id)
     for id in args.plane:
