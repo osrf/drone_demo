@@ -9,21 +9,25 @@
   <arg name="debug" default="false"/>
   <arg name="physics" default="ode"/>
   <arg name="verbose" default="false"/>
-  <!-- <arg name="world_name" default="worlds/typhoon_h480.world"/> -->
+  <arg name="sitl_world" default="yosemite"/>
   <arg name="respawn_gazebo" default="false"/>
   <!-- <arg name="use_clock_frequency" default="false"/> -->
   <!-- <arg name="pub_clock_frequency" default="100"/> -->
-  <arg name="px4_model" default="typhoon_h480"/>
   <!-- <arg name="mavros" default="false"/> -->
 
 
   <!-- set use_sim_time flag -->
   <param name="/use_sim_time" value="$(arg use_sim_time)"/>
 
-<include file="$(find yosemite_valley)/launch/drone_yosemite.launch" >
-  <arg name="gui" value="$(arg gui)"/>
-<!-- pass_all_args="true" -->
-</include>
+  <include if="$(eval arg('sitl_world') == 'yosemite')" file="$(find yosemite_valley)/launch/drone_yosemite.launch" >
+    <arg name="gui" value="$(arg gui)"/>
+  <!-- pass_all_args="true" -->
+  </include>
+
+  <include if="$(eval arg('sitl_world') == 'mcmillan')" file="$(find mcmillan_airfield)/launch/drone_mcmillan.launch" >
+    <arg name="gui" value="$(arg gui)"/>
+  <!-- pass_all_args="true" -->
+  </include>
 
  <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen" required="true"/>
  <node name="drone" pkg="sitl_launcher" type="launch_drone" output="screen"/>
