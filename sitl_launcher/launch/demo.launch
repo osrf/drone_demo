@@ -29,6 +29,11 @@
   <!-- pass_all_args="true" -->
   </include>
 
+ <include if="$(eval arg('sitl_world') == 'ksql')" file="$(find ksql_airport)/launch/drone_ksql.launch" >
+    <arg name="gui" value="$(arg gui)"/>
+  <!-- pass_all_args="true" -->
+  </include>
+
  <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen" required="true"/>
  <node name="drone" pkg="sitl_launcher" type="launch_drone" output="screen"/>
 
