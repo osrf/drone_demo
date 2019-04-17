@@ -29,6 +29,13 @@ RUN apt-get update \
     unzip \
     python-toml \
     speech-dispatcher \
+    python-markupsafe \
+    libasound2-dev libdbus-1-dev libpulse-dev libpulse-mainloop-glib0 libsdl2-2.0-0 libsndio-dev libsndio6.1 libxv-dev x11proto-video-dev \
+    protobuf-compiler \
+    python-jinja2 libsdl2-dev \
+    python3-catkin-pkg-modules \
+    python3-rospkg-modules \
+    python3-tk \
  && apt-get clean
 
 # optional dependency for qgc
@@ -39,6 +46,15 @@ RUN apt-get update \
     gstreamer1.0-libav \
  && apt-get clean
 
+# optional dependency for camera streaming
+RUN apt-get update \
+ && apt-get install -y \
+    gstreamer1.0-alsa \
+    libgstreamer-plugins-base1.0-dev \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-ugly \
+ && apt-get clean
 
  # Install geographic lib dataset, it should be in a post install hook, but isn't 
  # https://github.com/mavlink/mavros/issues/1005
@@ -46,8 +62,9 @@ RUN bash /opt/ros/kinetic/lib/mavros/install_geographiclib_datasets.sh
 
 RUN mkdir /workspace/drone_demo/src -p
 WORKDIR /workspace/drone_demo/src
-RUN git clone https://github.com/osrf/drone_demo.git -b updates
-RUN git clone https://github.com/tfoote/sitl_gazebo.git -b enable_video_streaming --recursive
+RUN git clone https://github.com/osrf/drone_demo.git -b xacro_models
+RUN git clone https://github.com/tfoote/sitl_gazebo.git -b xacro_models --recursive
+RUN git clone https://github.com/osrf/uav_testing.git -b typhoon_demo
 
 WORKDIR /workspace/drone_demo
 
@@ -55,9 +72,14 @@ WORKDIR /workspace/drone_demo
 RUN apt-get update \
  && apt-get dist-upgrade -y \ 
  && apt-get clean
+
 RUN . /opt/ros/kinetic/setup.sh && rosdep update && rosdep install --from-path src -iy
 RUN . /opt/ros/kinetic/setup.sh && catkin config --install
-RUN . /opt/ros/kinetic/setup.sh && catkin build
+RUN . /opt/ros/kinetic/setup.sh && catkin build --verbose
+# temporary partial rebuild for faster iteration touch this line to force a pull and rebuild
+RUN cd /workspace/drone_demo/src/drone_demo && git pull
+RUN . /opt/ros/kinetic/setup.sh && catkin build --verbose
+
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 CMD roslaunch sitl_launcher demo.launch gui:=false
