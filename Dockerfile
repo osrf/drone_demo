@@ -1,4 +1,4 @@
-FROM osrf/ros:kinetic-desktop-full
+FROM osrf/ros:melodic-desktop-full
 
 # Tools I find useful during development
 RUN apt-get update \
@@ -13,7 +13,7 @@ RUN apt-get update \
 
 RUN rosdep update
 
-RUN /bin/sh -c 'echo ". /opt/ros/kinetic/setup.bash" >> ~/.bashrc' \
+RUN /bin/sh -c 'echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc' \
  && /bin/sh -c 'echo ". /usr/share/gazebo/setup.sh" >> ~/.bashrc'
 
 # Needed until upcoming sync with mavlink 2018.12.12
@@ -25,7 +25,7 @@ RUN apt-get update \
  && apt-get clean
 RUN apt-get update \
  && apt-get install -y \
-    ros-kinetic-mavros \
+    ros-melodic-mavros \
     unzip \
     python-toml \
     speech-dispatcher \
@@ -58,7 +58,7 @@ RUN apt-get update \
 
  # Install geographic lib dataset, it should be in a post install hook, but isn't 
  # https://github.com/mavlink/mavros/issues/1005
-RUN bash /opt/ros/kinetic/lib/mavros/install_geographiclib_datasets.sh
+RUN bash /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
 
 RUN mkdir /workspace/drone_demo/src -p
 WORKDIR /workspace/drone_demo/src
@@ -73,12 +73,12 @@ RUN apt-get update \
  && apt-get dist-upgrade -y \ 
  && apt-get clean
 
-RUN . /opt/ros/kinetic/setup.sh && rosdep update && rosdep install --from-path src -iy
-RUN . /opt/ros/kinetic/setup.sh && catkin config --install
-RUN . /opt/ros/kinetic/setup.sh && catkin build --verbose
+RUN . /opt/ros/melodic/setup.sh && rosdep update && rosdep install --from-path src -iy
+RUN . /opt/ros/melodic/setup.sh && catkin config --install
+RUN . /opt/ros/melodic/setup.sh && catkin build --verbose
 # temporary partial rebuild for faster iteration touch this line to force a pull and rebuild
 RUN cd /workspace/drone_demo/src/drone_demo && git pull
-RUN . /opt/ros/kinetic/setup.sh && catkin build --verbose
+RUN . /opt/ros/melodic/setup.sh && catkin build --verbose
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
