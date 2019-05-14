@@ -63,8 +63,8 @@ RUN bash /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
 RUN mkdir /workspace/drone_demo/src -p
 WORKDIR /workspace/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b xacro_models
-RUN git clone https://github.com/tfoote/sitl_gazebo.git -b xacro_models --recursive
-RUN git clone https://github.com/osrf/uav_testing.git -b typhoon_demo
+RUN git clone https://github.com/tfoote/sitl_gazebo.git -b xacro_merge --recursive
+RUN git clone https://github.com/osrf/uav_testing.git -b master
 
 WORKDIR /workspace/drone_demo
 
