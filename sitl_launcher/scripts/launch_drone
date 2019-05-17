@@ -129,7 +129,9 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     return child
 
 def run_mavros(vehicle_id, arguments):
-    fcu_udp_port = arguments['mavlink_udp_port']
+    # px4 publishes to 14540 and 14550 for mavros and qgc respectively. Seems like they are forwarded to 14580 and 14570.
+    # Hence we use 14580 as the fcu port. If we use 14570 for mavros, it breaks the qgc connection.
+    fcu_udp_port = 14580 + int(vehicle_id)
     mavros_udp_port = 14600 + int(vehicle_id)
     connection_url = 'udp://:{}@localhost:{}'.format(mavros_udp_port,fcu_udp_port)
     exec_cmd = 'roslaunch sitl_launcher mavros_link.launch mavros_ns:={} fcu_url:={}'.format(str(vehicle_id), connection_url)
@@ -175,7 +177,7 @@ class Drone:
             'description_path': description_path,
             'drone_type': drone_type,
             'mavlink_tcp_port': 4560 + int(vehicle_id),
-            'mavlink_udp_port': 14560 + int(vehicle_id),
+            'mavlink_udp_port': 14570 + int(vehicle_id),
             'camera_control_udp_port': 14530 + int(vehicle_id),
             'camera_udp_port': 5600 + int(vehicle_id),
         }
