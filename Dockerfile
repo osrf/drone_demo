@@ -70,11 +70,24 @@ RUN apt-get update \
     ros-crystal-desktop \
  && apt-get clean
 
+ # Serial demo preinstalls
+RUN apt-get update \
+ && apt-get install -y \
+    socat \
+    byobu \
+    python3-colcon* \
+ && apt-get clean
+
+
 RUN mkdir /workspace/drone_demo/src -p
 WORKDIR /workspace/drone_demo/src
 RUN git clone https://github.com/osrf/drone_demo.git -b xacro_models
 RUN git clone https://github.com/tfoote/sitl_gazebo.git -b xacro_merge --recursive
 RUN git clone https://github.com/osrf/uav_testing.git -b master
+
+RUN mkdir /workspace/drone_demo_ros2/src -p
+WORKDIR /workspace/drone_demo_ros2/src
+RUN git clone https://github.com/osrf/ros2_serial_example.git
 
 WORKDIR /workspace/drone_demo
 
@@ -83,6 +96,11 @@ RUN apt-get update \
  && apt-get dist-upgrade -y \ 
  && apt-get clean
 
+WORKDIR /workspace/drone_demo_ros2
+RUN . /opt/ros/crystal/setup.sh && rosdep update && rosdep install --from-path src -iy
+RUN . /opt/ros/crystal/setup.sh && colcon build
+
+WORKDIR /workspace/drone_demo
 RUN . /opt/ros/melodic/setup.sh && rosdep update && rosdep install --from-path src -iy
 RUN . /opt/ros/melodic/setup.sh && catkin config --install
 RUN . /opt/ros/melodic/setup.sh && catkin build --verbose
