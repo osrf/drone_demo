@@ -17,7 +17,7 @@ RUN /bin/sh -c 'echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc' \
  && /bin/sh -c 'echo ". /usr/share/gazebo/setup.sh" >> ~/.bashrc'
 
 # Needed until upcoming sync with mavlink 2018.12.12
-RUN sed -i 's|/ros/|/ros-shadow-fixed/|' /etc/apt/sources.list.d/ros-latest.list
+# RUN sed -i 's|/ros/|/ros-shadow-fixed/|' /etc/apt/sources.list.d/ros-latest.list
 
 # Optimizing for build time preinstalling dependencies
 RUN apt-get update \
