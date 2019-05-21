@@ -19,6 +19,10 @@ RUN /bin/sh -c 'echo ". /opt/ros/melodic/setup.bash" >> ~/.bashrc' \
 # Needed until upcoming sync with mavlink 2018.12.12
 # RUN sed -i 's|/ros/|/ros-shadow-fixed/|' /etc/apt/sources.list.d/ros-latest.list
 
+# Add ROS2 sources
+RUN /bin/sh -c 'echo "deb http://packages.ros.org/ros2/ubuntu bionic main" > /etc/apt/sources.list.d/ros2-latest.list'
+# RUN curl http://repo.ros2.org/repos.key | apt-key add -
+
 # Optimizing for build time preinstalling dependencies
 RUN apt-get update \
  && apt-get dist-upgrade -y \ 
@@ -59,6 +63,12 @@ RUN apt-get update \
  # Install geographic lib dataset, it should be in a post install hook, but isn't 
  # https://github.com/mavlink/mavros/issues/1005
 RUN bash /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
+
+# Preinstall crystal for convenience
+RUN apt-get update \
+ && apt-get install -y \
+    ros-crystal-desktop \
+ && apt-get clean
 
 RUN mkdir /workspace/drone_demo/src -p
 WORKDIR /workspace/drone_demo/src
