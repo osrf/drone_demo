@@ -109,7 +109,6 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     if rootfs is set use that for the rootfs, otherwise run in a temporary directory.
     """
     if not rootfs:
-
             return run_px4(rc_script, px4_sim_model, tempdir)
 
     print("using rootfs ", rootfs)
@@ -129,12 +128,14 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     return child
 
 def run_mavros(vehicle_id, arguments):
+    # TODO: change the port range to some big range. should be done in the px4 config file.
+    # https://dev.px4.io/en/simulation/  
     # px4 publishes to 14540 and 14550 for mavros and qgc respectively. Seems like they are forwarded to 14580 and 14570.
     # Hence we use 14580 as the fcu port. If we use 14570 for mavros, it breaks the qgc connection.
     fcu_udp_port = 14580 + int(vehicle_id)
     mavros_udp_port = 14600 + int(vehicle_id)
-    connection_url = 'udp://:{}@localhost:{}'.format(mavros_udp_port,fcu_udp_port)
-    exec_cmd = 'roslaunch sitl_launcher mavros_link.launch mavros_ns:={} fcu_url:={}'.format(str(vehicle_id), connection_url)
+    connection_url = 'udp://:{}@0.0.0.0:{}'.format(mavros_udp_port,fcu_udp_port)
+    exec_cmd = 'roslaunch sitl_launcher mavros_link.launch mavros_ns:={} fcu_url:={} tgt_system:={}'.format(str(vehicle_id), connection_url, str(int(vehicle_id)+1))
     print('vehicle_id: {} exec_cmd: {}'.format(vehicle_id, exec_cmd))
 
     subprocess_env = os.environ.copy()
@@ -229,7 +230,7 @@ def run_drones(drones):
 
 
 class DroneSelector:
-
+# TODO: need to set as a parameter
     def __init__(self):
         from tkinter import Tk, Button, Label, StringVar
         from tkinter.ttk import Combobox

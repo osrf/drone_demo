@@ -1,12 +1,14 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="mavros_ns" default="0" />
-    <arg name="fcu_url" default="=udp://:14590@localhost:14560" />
+    <arg name="fcu_url" default="udp://0.0.0.0:14600@localhost:14580" />
+    <arg name="tgt_system" default="1" />
     <!-- <arg name="target" default="0" /> -->
 
     <group ns="$(arg mavros_ns)">
         <include file="$(find mavros)/launch/px4.launch">
             <arg name="fcu_url" value="$(arg fcu_url)" />
+            <arg name="tgt_system" value="$(arg tgt_system)"/>
         </include>
     </group>
 

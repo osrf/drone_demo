@@ -37,5 +37,6 @@
 
  <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen" required="true"/>
  <node name="drone" pkg="sitl_launcher" type="launch_drone" args="$(arg drone_args)" output="screen"/>
+ <!-- <node name="swarmsim" pkg="swarmsim" type="swarmsim" output="screen"/> -->
 
 </launch>
