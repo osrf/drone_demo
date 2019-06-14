@@ -11,6 +11,8 @@ find_package(catkin REQUIRED)
 
 include(ExternalProject)
 
+set(PX4_TARGET px4_sitl_rtps)
+
 set(firmware_path "${CMAKE_CURRENT_SOURCE_DIR}/Firmware")
 ExternalProject_Add(firmware
   GIT_REPOSITORY https://github.com/PX4/Firmware.git
@@ -18,7 +20,10 @@ ExternalProject_Add(firmware
   # UPDATE_COMMAND "${firmware_path}/Tools/check_submodules.sh"
   # SOURCE_DIR "${firmware_path}/Tools/sitl_gazebo"
   CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
-  # INSTALL_COMMAND ""
+  INSTALL_COMMAND rsync -avL --exclude .git --exclude build . build/${PX4_TARGET}/bin ${CMAKE_INSTALL_PREFIX}/share/px4
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND make ${PX4_TARGET}
+  BUILD_IN_SOURCE ON
 )
 
 ## System dependencies are found with CMake's conventions
