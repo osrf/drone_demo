@@ -101,6 +101,22 @@ RUN . /opt/ros/crystal/setup.sh && rosdep update && rosdep install --from-path s
 RUN . /opt/ros/crystal/setup.sh && colcon build
 
 WORKDIR /workspace/drone_demo
+
+
+# Get fastrps tarball for fastrtpsgen binary
+RUN wget https://www.eprosima.com/index.php/component/ars/repository/eprosima-fast-rtps/eprosima-fast-rtps-1-7-2/eprosima_fastrtps-1-7-2-linux-tar-gz?format=raw -O /tmp/fastrtps-1.7.2.tar.gz \
+ && tar -xf /tmp/fastrtps-1.7.2.tar.gz
+
+ # Micrortps demo dependencies
+ # TODO(add as declared dependencies)
+RUN apt-get update \
+ && apt-get install -y \
+    openjdk-8-jdk \
+    rsync \
+ && apt-get clean
+
+ENV FASTRTPSGEN_DIR /workspace/drone_demo/eProsima_FastRTPS-1.7.2-Linux/bin
+
 RUN . /opt/ros/melodic/setup.sh && rosdep update && rosdep install --from-path src -iy
 RUN . /opt/ros/melodic/setup.sh && catkin config --install
 RUN . /opt/ros/melodic/setup.sh && catkin build --verbose
