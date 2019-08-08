@@ -12,31 +12,32 @@
   <arg name="sitl_world" default="yosemite"/>
   <arg name="respawn_gazebo" default="false"/>
   <arg name="drone_args" default=""/>
+  <arg name="dry_run" default="true"/>
   <!-- <arg name="use_clock_frequency" default="false"/> -->
   <!-- <arg name="pub_clock_frequency" default="100"/> -->
   <!-- <arg name="mavros" default="false"/> -->
 
-
   <!-- set use_sim_time flag -->
   <param name="/use_sim_time" value="$(arg use_sim_time)"/>
 
-  <include if="$(eval arg('sitl_world') == 'yosemite')" file="$(find yosemite_valley)/launch/drone_yosemite.launch" >
+  <include if="$(eval arg('sitl_world') == 'yosemite')" file="$(find yosemite_valley)/launch/drone_yosemite.launch">
     <arg name="gui" value="$(arg gui)"/>
-  <!-- pass_all_args="true" -->
+    <!-- pass_all_args="true" -->
   </include>
 
-  <include if="$(eval arg('sitl_world') == 'mcmillan')" file="$(find mcmillan_airfield)/launch/drone_mcmillan.launch" >
+  <include if="$(eval arg('sitl_world') == 'mcmillan')" file="$(find mcmillan_airfield)/launch/drone_mcmillan.launch">
     <arg name="gui" value="$(arg gui)"/>
-  <!-- pass_all_args="true" -->
+    <!-- pass_all_args="true" -->
   </include>
 
- <include if="$(eval arg('sitl_world') == 'ksql')" file="$(find ksql_airport)/launch/drone_ksql.launch" >
+  <include if="$(eval arg('sitl_world') == 'ksql')" file="$(find ksql_airport)/launch/drone_ksql.launch">
     <arg name="gui" value="$(arg gui)"/>
-  <!-- pass_all_args="true" -->
+    <!-- pass_all_args="true" -->
   </include>
 
- <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen" required="true"/>
- <node name="drone" pkg="sitl_launcher" type="launch_drone" args="$(arg drone_args)" output="screen"/>
- <!-- <node name="swarmsim" pkg="swarmsim" type="swarmsim" output="screen"/> -->
+  <group if="$(arg dry_run)">
+    <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen" required="true"/>
+  </group>
+  <node name="drone" pkg="sitl_launcher" type="launch_drone" args="$(arg drone_args)" output="screen"/>
 
 </launch>
