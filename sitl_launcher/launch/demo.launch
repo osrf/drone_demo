@@ -35,9 +35,11 @@
     <!-- pass_all_args="true" -->
   </include>
 
-  <group if="$(arg dry_run)">
+  <!-- <group if="$(arg dry_run)"> -->
     <node name="qgc" pkg="qgroundcontrol" type="qgroundcontrol-start.sh" respawn="false" output="screen" required="true"/>
-  </group>
+  <!-- </group> -->
   <node name="drone" pkg="sitl_launcher" type="launch_drone" args="$(arg drone_args)" output="screen"/>
+
+  <node name ="link1_broadcaster" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 local_origin_ned fcu 10" />
 
 </launch>
