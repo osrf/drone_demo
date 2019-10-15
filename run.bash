@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
 
-IMG=tfoote/drone_demo
+if [ -z $1 ]
+then
+  IMG='local_docker_deploy'
+else
+  IMG=''
+fi
 
 ARGS=("$@")
 
