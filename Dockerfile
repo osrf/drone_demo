@@ -81,7 +81,7 @@ RUN apt-get update \
 
 RUN mkdir /workspace/drone_demo/src -p
 WORKDIR /workspace/drone_demo/src
-RUN git clone https://github.com/osrf/drone_demo.git -b xacro_models
+RUN git clone https://github.com/osrf/drone_demo.git -b master
 RUN git clone https://github.com/tfoote/sitl_gazebo.git -b xacro_merge --recursive
 RUN git clone https://github.com/osrf/uav_testing.git -b master
 
