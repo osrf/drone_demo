@@ -1,0 +1,4 @@
+# Add px4 to the path
+export PATH=@CMAKE_INSTALL_PREFIX@/@PROJECT_NAME@/bin:$PATH
+# Put the px4 install directory in front of the standard share path
+export ROS_PACKAGE_PATH=@CMAKE_INSTALL_PREFIX@/@PROJECT_NAME@:$ROS_PACKAGE_PATH

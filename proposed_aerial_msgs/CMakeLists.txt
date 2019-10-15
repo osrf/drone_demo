@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(px4)
+project(proposed_aerial_msgs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -7,23 +7,10 @@ project(px4)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
-
-include(ExternalProject)
-
-set(PX4_TARGET px4_sitl_rtps)
-
-set(firmware_path "${CMAKE_CURRENT_SOURCE_DIR}/Firmware")
-ExternalProject_Add(firmware
-  GIT_REPOSITORY https://github.com/PX4/Firmware.git
-  GIT_TAG master
-  # UPDATE_COMMAND "${firmware_path}/Tools/check_submodules.sh"
-  # SOURCE_DIR "${firmware_path}/Tools/sitl_gazebo"
-  CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
-  INSTALL_COMMAND rsync -avL --exclude .git --exclude build . build/${PX4_TARGET}/bin ${CMAKE_INSTALL_PREFIX}/share/px4
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND make ${PX4_TARGET}
-  BUILD_IN_SOURCE ON
+find_package(catkin REQUIRED COMPONENTS
+  geometry_msgs
+  sensor_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -45,10 +32,10 @@ ExternalProject_Add(firmware
 ##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
 ## * In the file package.xml:
 ##   * add a build_depend tag for "message_generation"
-##   * add a build_depend and a run_depend tag for each package in MSG_DEP_SET
+##   * add a build_depend and a exec_depend tag for each package in MSG_DEP_SET
 ##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
 ##     but can be declared for certainty nonetheless:
-##     * add a run_depend tag for "message_runtime"
+##     * add a exec_depend tag for "message_runtime"
 ## * In this file (CMakeLists.txt):
 ##   * add "message_generation" and every package in MSG_DEP_SET to
 ##     find_package(catkin REQUIRED COMPONENTS ...)
@@ -60,18 +47,26 @@ ExternalProject_Add(firmware
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  AngularVelocity.msg
+  Attitude.msg
+  FlightMode.msg
+  GlobalPosition.msg
+  GlobalWaypoints.msg
+  LinearAcceleration.msg
+  MavlinkAnnotatedWaypoints.msg
+  MavlinkWaypointParameters.msg
+  OdometryWithAcceleration.msg
+  UpperTriangularCovariance.msg
+  UpperTriangularCovariance3.msg
+)
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  SetFlightMode.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -81,10 +76,10 @@ ExternalProject_Add(firmware
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs#   sensor_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -93,7 +88,7 @@ ExternalProject_Add(firmware
 ## To declare and build dynamic reconfigure parameters within this
 ## package, follow these steps:
 ## * In the file package.xml:
-##   * add a build_depend and a run_depend tag for "dynamic_reconfigure"
+##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
 ## * In this file (CMakeLists.txt):
 ##   * add "dynamic_reconfigure" to
 ##     find_package(catkin REQUIRED COMPONENTS ...)
@@ -117,9 +112,9 @@ ExternalProject_Add(firmware
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES px4
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
+#  LIBRARIES proposed_aerial_msgs
+#  CATKIN_DEPENDS geometry_msgs sensor_msgs
+ DEPENDS message_runtime
 )
 
 ###########
@@ -130,12 +125,12 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-# ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/px4.cpp
+#   src/${PROJECT_NAME}/proposed_aerial_msgs.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -146,7 +141,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/px4_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/proposed_aerial_msgs_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -198,17 +193,12 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
-# Configure the setup script
-catkin_add_env_hooks(99_px4_setup
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-  SHELLS sh)
-
 #############
 ## Testing ##
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_px4.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_proposed_aerial_msgs.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
