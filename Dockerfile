@@ -64,10 +64,10 @@ RUN apt-get update \
  # https://github.com/mavlink/mavros/issues/1005
 RUN bash /opt/ros/melodic/lib/mavros/install_geographiclib_datasets.sh
 
-# Preinstall crystal for convenience
+# Preinstall dashing for convenience
 RUN apt-get update \
  && apt-get install -y \
-    ros-crystal-desktop \
+    ros-dashing-desktop \
  && apt-get clean
 
  # Serial demo preinstalls
@@ -97,8 +97,8 @@ RUN apt-get update \
  && apt-get clean
 
 WORKDIR /workspace/drone_demo_ros2
-RUN . /opt/ros/crystal/setup.sh && rosdep update && rosdep install --from-path src -iy
-RUN . /opt/ros/crystal/setup.sh && colcon build
+RUN . /opt/ros/dashing/setup.sh && rosdep update && rosdep install --from-path src -iy
+RUN . /opt/ros/dashing/setup.sh && colcon build
 
 WORKDIR /workspace/drone_demo
 
