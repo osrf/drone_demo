@@ -51,7 +51,7 @@ ros2_to_serial_bridge:
                                        # and 'cobs'.
         topics:                        # The list of topics to map; only used
                                        # if dynamic_serial_mapping_ms is < 0.
-            batterystatus:
+            battery_status:
                 serial_mapping: 6
                 type: px4_msgs/BatteryStatus
                 direction: SerialToROS2
