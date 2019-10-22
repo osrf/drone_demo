@@ -1,31 +1,7 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(qgroundcontrol)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
-
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-)
-
-
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if your package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES qgroundcontrol
-#  CATKIN_DEPENDS tar unzip
-#  DEPENDS system_lib
-)
+find_package(ament_cmake REQUIRED)
 
 include(ExternalProject)
 
@@ -38,6 +14,9 @@ ExternalProject_Add(qgroundcontrol
   # CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
-  INSTALL_COMMAND echo ${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION} && cp -r ../qgroundcontrol ${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}
+  INSTALL_COMMAND echo ${CMAKE_INSTALL_PREFIX} && cp -r ../qgroundcontrol ${CMAKE_INSTALL_PREFIX}/lib/qgroundcontrol
 )
 
+ament_export_libraries(qgroundcontrol)
+
+ament_package()
