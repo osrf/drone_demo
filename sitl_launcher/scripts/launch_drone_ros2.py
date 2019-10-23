@@ -5,7 +5,7 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from io import StringIO
-from contextlib import ExitStack
+from contextlib2 import ExitStack
 from distutils.dir_util import copy_tree
 import math
 import os
@@ -16,35 +16,36 @@ import tempfile
 
 # from em import Interpreter
 from gazebo_msgs.srv import DeleteModel
-from gazebo_msgs.srv import DeleteModelRequest
-from gazebo_msgs.srv import SpawnModel
-from gazebo_msgs.srv import SpawnModelRequest
-from rosgraph import ROS_MASTER_URI
-from rospkg import RosPack
-from rospy import ServiceProxy
-from rospy import myargv as rospy_myargv
-from rospy import wait_for_service
+# from gazebo_msgs.srv import DeleteModelRequest
+from gazebo_msgs.srv import SpawnEntity
+# from gazebo_msgs.srv import SpawnModelRequest
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 
+# from rosgraph import ROS_MASTER_URI
+# from rospkg import RosPack
+# from rospy import ServiceProxy
+# from rospy import myargv as rospy_myargv
+# from rospy import wait_for_service
+import rclpy
 
-def spawn_model(model_name, model_xml,
+def spawn_model(node, model_name, model_xml,
     pose, ros_master_uri=None, robot_namespace=None, debug=True,
-    service_name='/gazebo/spawn_sdf_model',
+    service_name='/spawn_entity',
 ):
     x, y, yaw = pose
     INITIAL_HEIGHT = 0.5 # m
 
-    if ros_master_uri:
-        original_uri = os.environ[ROS_MASTER_URI]
-        os.environ[ROS_MASTER_URI] = ros_master_uri
-    wait_for_service(service_name)
-    srv = ServiceProxy(service_name, SpawnModel)
+    cli = node.create_client(SpawnEntity, service_name)
+
+    while not cli.wait_for_service(timeout_sec=1.0):
+        print('service not available, waiting again...')
 
     if debug:
         print(model_xml)
 
-    req = SpawnModelRequest()
-    req.model_name = model_name
-    req.model_xml = model_xml
+    req = SpawnEntity.Request()
+    req.name = model_name
+    req.xml = model_xml
     req.robot_namespace = robot_namespace if robot_namespace else model_name
     req.initial_pose.position.x = x
     req.initial_pose.position.y = y
@@ -54,47 +55,43 @@ def spawn_model(model_name, model_xml,
     req.initial_pose.orientation.z = math.sin(yaw / 2.0)
     req.initial_pose.orientation.w = math.cos(yaw / 2.0)
     req.reference_frame = ''
-
-    resp = srv(req)
-
-    if ros_master_uri:
-        os.environ[ROS_MASTER_URI] = original_uri
-
-    if resp.success:
+    future = cli.call_async(req)
+    rclpy.spin_until_future_complete(node, future)
+    resp = future.result()
+    if resp is not None:
         print(resp.status_message, '(%s)' % model_name)
         return 0
     else:
         print(resp.status_message, file=sys.stderr)
         return 1
-
-def delete_model(model_name, ros_master_uri=None, robot_namespace=None,
-    service_name='/gazebo/delete_model'):
-
-    if ros_master_uri:
-        original_uri = os.environ[ROS_MASTER_URI]
-        os.environ[ROS_MASTER_URI] = ros_master_uri
-    wait_for_service(service_name)
-    srv = ServiceProxy(service_name, DeleteModel)
-
-    req = DeleteModelRequest()
-    req.model_name = model_name
- 
-    resp = srv(req)
-
-    if ros_master_uri:
-        os.environ[ROS_MASTER_URI] = original_uri
-
-    if resp.success:
-        print(resp.status_message, '(%s)' % model_name)
-        return 0
-    else:
-        print(resp.status_message, file=sys.stderr)
-        return 1
-
-
+#
+# def delete_model(model_name, ros_master_uri=None, robot_namespace=None,
+#     service_name='/gazebo/delete_model'):
+#
+#     if ros_master_uri:
+#         original_uri = os.environ[ROS_MASTER_URI]
+#         os.environ[ROS_MASTER_URI] = ros_master_uri
+#     wait_for_service(service_name)
+#     srv = ServiceProxy(service_name, DeleteModel)
+#
+#     req = DeleteModelRequest()
+#     req.model_name = model_name
+#
+#     resp = srv(req)
+#
+#     if ros_master_uri:
+#         os.environ[ROS_MASTER_URI] = original_uri
+#
+#     if resp.success:
+#         print(resp.status_message, '(%s)' % model_name)
+#         return 0
+#     else:
+#         print(resp.status_message, file=sys.stderr)
+#         return 1
+#
+#
 def get_px4_dir():
-    rp = RosPack()
-    return rp.get_path('px4')
+    return get_package_share_directory('px4')
 
 
 def seed_rootfs(rootfs):
@@ -116,7 +113,7 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     print("using rootfs ", rootfs)
     seed_rootfs(rootfs)
 
-    cmd = ['bin/px4', '%s/ROMFS/px4fmu_common' % rootfs, 
+    cmd = ['bin/px4', '%s/ROMFS/px4fmu_common' % rootfs,
            '-s', rc_script,
            '-i', vehicle_id,
            '-d']
@@ -129,29 +126,24 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
         env=subprocess_env)
     return child
 
-model_files = {
-    'iris': '/home/osrf/diux/src/sitl_gazebo/models/iris_fpv_cam/iris_fpv_cam.sdf',
-    'plane': '/home/osrf/diux/src/sitl_gazebo/models/plane_cam/plane_cam.sdf',
-    'typhoon': '/home/osrf/diux/src/sitl_gazebo/models/typhoon_h480/typhoon_h480.sdf',
-}
 
-xacro_args = 'rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s --inorder'
+xacro_args = 'rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/model.urdf'
 valid_models = {
-    'iris': 'rosrun xacro xacro %(description_path)s/iris/%(drone_type)s.sdf.xacro ' + xacro_args,
-    'plane': 'rosrun xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args,
-    'typhoon_h480': 'rosrun xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args,
+    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.urdf.xacro ' + xacro_args,
+    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args,
+    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args,
 }
 
 starting_poses={
-    '0': (0,0,0),
-    '1': (0,1.5,0),
-    '2': (0,3,0),
-    '3': (0,4.5,0),
+    '0': (0.0, 0.0, 0.0),
+    '1': (0.0, 1.5, 0.0),
+    '2': (0.0, 3.0, 0.0),
+    '3': (0.0, 4.5, 0.0),
 }
 
-
 class Drone:
-    def __init__(self, drone_type, pose=(0,0,0), vehicle_id='0'):
+    def __init__(self, node, drone_type, pose=(0,0,0), vehicle_id='0'):
+        self.node = node
         assert drone_type in valid_models.keys()
         self.drone_type = drone_type
         self.pose = pose
@@ -159,9 +151,7 @@ class Drone:
         self.vehicle_name = self.drone_type+'_%s' % self.vehicle_id
         assert int(vehicle_id) <= 10
 
-        import rospkg
-        rp = rospkg.RosPack()
-        description_path = os.path.join(rp.get_path('mavlink_sitl_gazebo'), 'models')
+        description_path = os.path.join(get_package_share_directory('mavlink_sitl_gazebo'), 'models')
         self.arguments = {
             'description_path': description_path,
             'drone_type': drone_type,
@@ -171,14 +161,17 @@ class Drone:
             'camera_udp_port': 5600 + int(vehicle_id),
         }
 
-        self.xml = subprocess.check_output(valid_models[drone_type] % self.arguments, shell=True).decode('utf-8')
+        subprocess.check_output(valid_models[drone_type] % self.arguments, shell=True).decode('utf-8')
+        with open('/tmp/model.urdf', 'r') as myfile:
+          self.xml = myfile.read()
+        subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher", "/tmp/model.urdf", "joint_states:=/iris_0/joint_states"])
 
     def spawn(self):
-        spawn_model(self.vehicle_name, self.xml, self.pose)
+        spawn_model(self.node, self.vehicle_name, self.xml, self.pose)
 
     def unspawn(self):
         delete_model(self.vehicle_name)
-    
+
     def wait(self):
         if self.autopilot_process:
             self.autopilot_process.wait()
@@ -222,6 +215,8 @@ class DroneSelector:
         from tkinter import Tk, Button, Label, StringVar
         from tkinter.ttk import Combobox
 
+        self.node = rclpy.create_node('spawn_models')
+
         self.type_map = {'iris': 2, 'plane': 3, 'typhoon_h480': 4}
 
         self.window = Tk()
@@ -256,7 +251,7 @@ class DroneSelector:
                 if id_str not in starting_poses:
                     print("error cannot provision more drone %s, no starting pose defined" % id_str)
                     sys.exit()
-                drones[id_str] = Drone(t, starting_poses[id_str], id_str)
+                drones[id_str] = Drone(self.node, t, starting_poses[id_str], id_str)
                 id += 1
         self.drones = drones
 
@@ -277,9 +272,11 @@ def main():
     parser.add_argument('--plane', help="What position to start planes in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
     parser.add_argument('--typhoon', help="What position to start typhoons in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
 
-    myargv = rospy_myargv(argv=sys.argv)[1:]
-    print("myargv", myargv)
-    args = parser.parse_args(args=myargv)
+    rclpy.init(args=sys.argv)
+
+    # myargv = rospy_myargv(argv=sys.argv)[1:]
+    # print("myargv", myargv)
+    args = parser.parse_args(args=sys.argv[1:])
 
     overlap = set(args.iris) & set(args.plane)
     if overlap:
