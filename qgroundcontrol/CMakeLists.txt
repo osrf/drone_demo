@@ -14,7 +14,7 @@ ExternalProject_Add(qgroundcontrol
   # CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
-  INSTALL_COMMAND echo ${CMAKE_INSTALL_PREFIX} && cp -r ../qgroundcontrol ${CMAKE_INSTALL_PREFIX}/lib/qgroundcontrol
+  INSTALL_COMMAND echo ${CMAKE_INSTALL_PREFIX} && mkdir -p ${CMAKE_INSTALL_PREFIX}/lib && cp -r ../qgroundcontrol ${CMAKE_INSTALL_PREFIX}/lib
 )
 
 ament_export_libraries(qgroundcontrol)
