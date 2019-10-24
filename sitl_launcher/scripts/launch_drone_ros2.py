@@ -33,7 +33,7 @@ def spawn_model(node, model_name, model_xml,
     service_name='/spawn_entity',
 ):
     x, y, yaw = pose
-    INITIAL_HEIGHT = 0.5 # m
+    INITIAL_HEIGHT = 0.1 # m
 
     cli = node.create_client(SpawnEntity, service_name)
 
@@ -127,11 +127,18 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     return child
 
 
-xacro_args = 'rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/model.urdf'
+xacro_args = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/model.urdf'
 valid_models = {
     'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.urdf.xacro ' + xacro_args,
-    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args,
+    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.urdf.xacro ' + xacro_args,
     'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args,
+}
+
+xacro_args_sdf = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder'
+valid_models_sdf = {
+    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
+    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
+    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
 }
 
 starting_poses={
@@ -159,12 +166,12 @@ class Drone:
             'mavlink_udp_port': 14560 + int(vehicle_id),
             'camera_control_udp_port': 14530 + int(vehicle_id),
             'camera_udp_port': 5600 + int(vehicle_id),
+            'vehicle_name': self.vehicle_name,
         }
 
         subprocess.check_output(valid_models[drone_type] % self.arguments, shell=True).decode('utf-8')
-        with open('/tmp/model.urdf', 'r') as myfile:
-          self.xml = myfile.read()
-        subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher", "/tmp/model.urdf", "joint_states:=/iris_0/joint_states"])
+        self.xml = subprocess.check_output(valid_models_sdf[drone_type] % self.arguments, shell=True).decode('utf-8')
+        subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher", "/tmp/model.urdf", "joint_states:=/" + self.vehicle_name + "/joint_states"])
 
     def spawn(self):
         spawn_model(self.node, self.vehicle_name, self.xml, self.pose)
