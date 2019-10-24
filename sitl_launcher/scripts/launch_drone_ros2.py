@@ -127,7 +127,7 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     return child
 
 
-xacro_args = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/model.urdf'
+xacro_args = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/%(vehicle_name)s.urdf'
 valid_models = {
     'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.urdf.xacro ' + xacro_args,
     'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.urdf.xacro ' + xacro_args,
@@ -171,7 +171,11 @@ class Drone:
 
         subprocess.check_output(valid_models[drone_type] % self.arguments, shell=True).decode('utf-8')
         self.xml = subprocess.check_output(valid_models_sdf[drone_type] % self.arguments, shell=True).decode('utf-8')
-        subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher", "/tmp/model.urdf", "joint_states:=/" + self.vehicle_name + "/joint_states"])
+        subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher",
+                            "/tmp/"+ self.vehicle_name +".urdf",
+                            "joint_states:=/" + self.vehicle_name + "/joint_states",
+                            "robot_description:=" + self.vehicle_name + "/robot_description",
+                            "__node:=robot_state_publisher_" + self.vehicle_name])
 
     def spawn(self):
         spawn_model(self.node, self.vehicle_name, self.xml, self.pose)
