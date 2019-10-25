@@ -117,6 +117,35 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
            '-s', rc_script,
            '-i', vehicle_id,
            '-d']
+
+    sitl_launcher_dir = get_package_share_directory('sitl_launcher')
+
+    with open(sitl_launcher_dir + '/config/px4_serial_to_ros2_bridge_params.yaml.in', 'r') as file:
+        px4_config_template = file.read()
+
+    with open(sitl_launcher_dir + '/config/run_px4-micrortps_client_and_ros2_bridge.bash.in', 'r') as file:
+        px4_params_template = file.read()
+
+    arguments = {
+        'udp_send_port': 2019 + int(vehicle_id)*2,
+        'udp_recv_port': 2020 + int(vehicle_id)*2,
+        'vehicle_name': px4_sim_model + "_" + vehicle_id,
+        'vehicle_id': vehicle_id,
+        'px4_params': rootfs + '/px4_serial_to_ros2_bridge_params.yaml',
+    }
+
+    f = open(rootfs + '/px4_serial_to_ros2_bridge_params.yaml', "w")
+    f.write(px4_config_template % arguments)
+    f.write("\n")
+    f.close()
+
+    f = open(rootfs + '/micrortps_client_and_ros2_bridge.bash', "w")
+    f.write(px4_params_template % arguments)
+    f.write("\n")
+    f.close()
+
+    subprocess.Popen(["bash", rootfs + '/micrortps_client_and_ros2_bridge.bash'])
+
     print("running px4 with command: ", cmd)
     subprocess_env = os.environ.copy()
     subprocess_env['PX4_SIM_MODEL'] = px4_sim_model
