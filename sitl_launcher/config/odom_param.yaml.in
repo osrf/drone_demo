@@ -1,0 +1,6 @@
+%(vehicle_name)s/drone_odom_broadcast:
+    ros__parameters:
+        use_sim_time: True
+        odom_frame: %(vehicle_name)s/odom
+        base_link_frame: %(vehicle_name)s_base_link
+        vehicle_odometry: /%(vehicle_name)s/vehicle_odometry

@@ -1,5 +1,6 @@
 %(vehicle_name)s/ros2_to_serial_bridge:
     ros__parameters:
+        use_sim_time: True
         backend_comms: udp                       # Which backend to use for communications;
                                                  # 'uart' and 'udp' are currently supported.
         device: /dev/pts/6                       # Which device to use for communications;

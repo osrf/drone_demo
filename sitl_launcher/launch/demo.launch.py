@@ -46,6 +46,5 @@ def generate_launch_description():
 
     return LaunchDescription([
         Node(package='qgroundcontrol', node_executable='qgroundcontrol-start.sh', output='screen'),
-        # Node(package='sitl_launcher', node_executable='drone_tf_broadcast', output='screen'),
         included_launch,
     ])

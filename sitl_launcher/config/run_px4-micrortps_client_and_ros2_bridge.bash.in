@@ -9,4 +9,6 @@ while launch_micrortps_client ; ret=$? ; [ $ret -ne 0 ];do
   sleep 1
 done
 
-ros2 run ros2_serial_example ros2_to_serial_bridge  __params:=%(px4_params)s __ns:=/%(vehicle_name)s __node:=%(vehicle_name)s/ros2_to_serial_bridge >> /dev/null
+ros2 run sitl_launcher drone_tf_broadcast --ros-args -r __ns:=/%(vehicle_name)s --params-file %(odom_params)s &
+ros2 run tf2_ros static_transform_publisher %(poseX)s %(poseY)s 0 0 0 0 /map /%(vehicle_name)s/odom --ros-args -r use_sim_time:=True -r __ns:=/%(vehicle_name)s &
+ros2 run ros2_serial_example ros2_to_serial_bridge --ros-args --params-file %(px4_params)s -r __ns:=/%(vehicle_name)s >> /dev/null

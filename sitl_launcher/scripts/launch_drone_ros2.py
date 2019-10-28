@@ -21,12 +21,28 @@ from gazebo_msgs.srv import SpawnEntity
 # from gazebo_msgs.srv import SpawnModelRequest
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 
-# from rosgraph import ROS_MASTER_URI
-# from rospkg import RosPack
-# from rospy import ServiceProxy
-# from rospy import myargv as rospy_myargv
-# from rospy import wait_for_service
 import rclpy
+
+xacro_args = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/%(vehicle_name)s.urdf'
+valid_models = {
+    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.urdf.xacro ' + xacro_args,
+    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.urdf.xacro ' + xacro_args,
+    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args,
+}
+
+xacro_args_sdf = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder'
+valid_models_sdf = {
+    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
+    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
+    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
+}
+
+starting_poses={
+    '0': (0.0, 0.0, 0.0),
+    '1': (0.0, 1.5, 0.0),
+    '2': (0.0, 3.0, 0.0),
+    '3': (0.0, 4.5, 0.0),
+}
 
 def spawn_model(node, model_name, model_xml,
     pose, ros_master_uri=None, robot_namespace=None, debug=True,
@@ -40,8 +56,8 @@ def spawn_model(node, model_name, model_xml,
     while not cli.wait_for_service(timeout_sec=1.0):
         print('service not available, waiting again...')
 
-    if debug:
-        print(model_xml)
+    # if debug:
+    #     print(model_xml)
 
     req = SpawnEntity.Request()
     req.name = model_name
@@ -126,12 +142,18 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     with open(sitl_launcher_dir + '/config/run_px4-micrortps_client_and_ros2_bridge.bash.in', 'r') as file:
         px4_params_template = file.read()
 
+    with open(sitl_launcher_dir + '/config/odom_param.yaml.in', 'r') as file:
+        odom_params_template = file.read()
+
     arguments = {
         'udp_send_port': 2019 + int(vehicle_id)*2,
         'udp_recv_port': 2020 + int(vehicle_id)*2,
         'vehicle_name': px4_sim_model + "_" + vehicle_id,
         'vehicle_id': vehicle_id,
         'px4_params': rootfs + '/px4_serial_to_ros2_bridge_params.yaml',
+        'odom_params': rootfs + '/odom.yaml',
+        'poseX': starting_poses[str(vehicle_id)][0],
+        'poseY': starting_poses[str(vehicle_id)][1],
     }
 
     f = open(rootfs + '/px4_serial_to_ros2_bridge_params.yaml', "w")
@@ -141,6 +163,11 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
 
     f = open(rootfs + '/micrortps_client_and_ros2_bridge.bash', "w")
     f.write(px4_params_template % arguments)
+    f.write("\n")
+    f.close()
+
+    f = open(rootfs + '/odom.yaml', "w")
+    f.write(odom_params_template % arguments)
     f.write("\n")
     f.close()
 
@@ -154,28 +181,6 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
         cwd=rootfs,
         env=subprocess_env)
     return child
-
-
-xacro_args = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/%(vehicle_name)s.urdf'
-valid_models = {
-    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.urdf.xacro ' + xacro_args,
-    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.urdf.xacro ' + xacro_args,
-    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args,
-}
-
-xacro_args_sdf = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder'
-valid_models_sdf = {
-    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
-    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
-    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
-}
-
-starting_poses={
-    '0': (0.0, 0.0, 0.0),
-    '1': (0.0, 1.5, 0.0),
-    '2': (0.0, 3.0, 0.0),
-    '3': (0.0, 4.5, 0.0),
-}
 
 class Drone:
     def __init__(self, node, drone_type, pose=(0,0,0), vehicle_id='0'):
@@ -202,9 +207,9 @@ class Drone:
         self.xml = subprocess.check_output(valid_models_sdf[drone_type] % self.arguments, shell=True).decode('utf-8')
         subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher",
                             "/tmp/"+ self.vehicle_name +".urdf",
-                            "joint_states:=/" + self.vehicle_name + "/joint_states",
-                            "robot_description:=" + self.vehicle_name + "/robot_description",
-                            "__node:=robot_state_publisher_" + self.vehicle_name])
+                            "--ros-args",
+                            "-r", "use_sim_time:=True",
+                            "-r", "__ns:=/" + self.vehicle_name])
 
     def spawn(self):
         spawn_model(self.node, self.vehicle_name, self.xml, self.pose)
@@ -306,41 +311,14 @@ class DroneSelector:
 def main():
     SUPPORTED_DRONE_TYPES=['typhoon_h480', 'iris', 'plane']
 
-    parser = argparse.ArgumentParser(description='Spawn a drone')
-    # parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
-    parser.add_argument('--iris', help="What position to start irises in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
-    parser.add_argument('--plane', help="What position to start planes in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
-    parser.add_argument('--typhoon', help="What position to start typhoons in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
-
     rclpy.init(args=sys.argv)
 
-    # myargv = rospy_myargv(argv=sys.argv)[1:]
-    # print("myargv", myargv)
-    args = parser.parse_args(args=sys.argv[1:])
-
-    overlap = set(args.iris) & set(args.plane)
-    if overlap:
-        parser.error("iris and plane poses cannot overlap %s" % overlap)
-    overlap = set(args.iris) & set(args.typhoon)
-    if overlap:
-        parser.error("iris and typhoon poses cannot overlap %s" % overlap)
-    overlap = set(args.typhoon) & set(args.plane)
-    if overlap:
-        parser.error("typhoon and plane poses cannot overlap %s" % overlap)
-
     drones = {}
-    if not (args.iris + args.plane + args.typhoon):
-        ds = DroneSelector()
-        ds.mainloop()
-        drones = ds.drones
-        print("DRONES is", drones)
+    ds = DroneSelector()
+    ds.mainloop()
+    drones = ds.drones
+    print("DRONES is", drones)
 
-    for id in args.iris:
-        drones[id] = Drone('iris', starting_poses[id], id)
-    for id in args.plane:
-        drones[id] = Drone('plane', starting_poses[id], id)
-    for id in args.typhoon:
-        drones[id] = Drone('typhoon_h480', starting_poses[id], id)
     run_drones(drones)
 
 if __name__ == '__main__':
