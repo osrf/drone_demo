@@ -77,16 +77,18 @@ private:
     odom_tf_msg->header.frame_id = odom_frame_;
     odom_tf_msg->child_frame_id = base_link_frame_;
 
-    tf2::Quaternion q_orig, q_rot, q_new;
+    tf2::Quaternion q_orig, q_new;
+
+    // ENU ---> NED
+    // roll ---->roll
+    // pitch ----->-pitch
+    // yaw ----->-yaw+1.57.
 
     q_orig = tf2::Quaternion(msg->q[1], msg->q[2], msg->q[3], msg->q[0]);
-
-    // double r=-3.14159/2, p=0, y=0;  // Rotate the previous pose by 180* about X
-    double r=0, p=0, y=-3.14159/2;  // Rotate the previous pose by 180* about X
-    q_rot.setRPY(r, p, y);
-
-    q_new = q_rot*q_orig;  // Calculate the new orientation
-    q_new.normalize();
+    tf2::Matrix3x3 m(q_orig);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw, 2);
+    q_new.setRPY(roll, -pitch, -yaw+1.57);
 
     // Stuff and publish /odom
     odom_msg->header.stamp = clock_->now();
@@ -98,11 +100,9 @@ private:
     odom_msg->pose.pose.orientation.z = q_new.z();
     odom_msg->pose.pose.orientation.w = q_new.w();
 
-    // Pose covariance (required by robot_pose_ekf) TODO: publish realistic values
     for (unsigned int i = 0; i < odom_msg->pose.covariance.size(); ++i) {
-      odom_msg->pose.covariance[i] = 0.0;
+      odom_msg->pose.covariance[i] = msg->pose_covariance[i];
     }
-
 
     // Stuff and publish /tf
     odom_tf_msg->header.stamp = odom_msg->header.stamp;
