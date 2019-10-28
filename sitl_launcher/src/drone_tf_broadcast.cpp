@@ -23,20 +23,42 @@ using namespace std::chrono_literals;
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
 
+#include <nav_msgs/msg/odometry.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+
 using std::placeholders::_1;
 
 class MinimalSubscriber : public rclcpp::Node
 {
 public:
   MinimalSubscriber()
-  : Node("minimal_subscriber"),
-   clock(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME)),
+  : Node("drone_odom_broadcast"),
+   clock_(get_clock()),
    buffer(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME))
   {
-    // clock = ;
-    subscription_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>(
-      "/vehicle_odometry", 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+
+    rclcpp::QoS  odom_and_imu_qos(rclcpp::KeepLast(50));
+
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(buffer);
+
+    odom_pub_ = create_publisher<nav_msgs::msg::Odometry>(std::string("odom"), odom_and_imu_qos);
+
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    declare_parameter("odom_frame", "odom", descriptor);
+    declare_parameter("vehicle_odometry", "/vehicle_odometry", descriptor);
+    declare_parameter("base_link_frame", "plane_1_base_link", descriptor);
+
+    odom_frame_ = "odom";
+    get_parameter("odom_frame", odom_frame_);
+    base_link_frame_ = "plane_1_base_link";
+    get_parameter("base_link_frame", base_link_frame_);
+
+    std::string vehicle_odometry_str = "/vehicle_odometry";
+    get_parameter("vehicle_odometry", vehicle_odometry_str);
+
+    subscription_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>(
+      vehicle_odometry_str, 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
 
   }
   void init_tf_broadcaster()
@@ -48,102 +70,65 @@ private:
   void topic_callback(const px4_msgs::msg::VehicleOdometry::SharedPtr msg) const
   {
 
-    // RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
-    geometry_msgs::msg::TransformStamped t;
+    auto odom_msg = std::make_unique<nav_msgs::msg::Odometry>();
+    odom_msg->header.frame_id = odom_frame_;
+    odom_msg->child_frame_id = base_link_frame_;
+    auto odom_tf_msg = std::make_shared<geometry_msgs::msg::TransformStamped>();
+    odom_tf_msg->header.frame_id = odom_frame_;
+    odom_tf_msg->child_frame_id = base_link_frame_;
 
-    t.header.stamp = clock->now();
-    t.header.frame_id = "world";
-    t.child_frame_id = "base_link";
-    t.transform.translation.x = msg->x;
-    t.transform.translation.y = msg->y;
-    t.transform.translation.z = -msg->z;
-    t.transform.rotation.x = msg->q[1];
-    t.transform.rotation.y = msg->q[2];
-    t.transform.rotation.z = msg->q[3];
-    t.transform.rotation.w = msg->q[0];
-    tf_broadcaster_->sendTransform(t);
+    tf2::Quaternion q_orig, q_rot, q_new;
 
-    // geometry_msgs::msg::TransformStamped tfGeom;
-    // try {
-        //
-        // builtin_interfaces::msg::Time time_stamp = clock->now();
-        // tf2::TimePoint time_point = tf2::TimePoint(
-        //     std::chrono::seconds(time_stamp.sec) +
-        //     std::chrono::nanoseconds(time_stamp.nanosec));
-        // tfGeom = buffer.lookupTransform(
-        //     "rotor_0", "base_link", time_point, tf2::Duration(100ms));
-        // tf_broadcaster_->sendTransform(tfGeom);
-        //
-        // printf("%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\n",
-        //        tfGeom.transform.translation.x,
-        //        tfGeom.transform.translation.y,
-        //        tfGeom.transform.translation.z,
-        //        t.transform.rotation.x,
-        //        t.transform.rotation.y,
-        //        t.transform.rotation.z,
-        //        t.transform.rotation.w);
+    q_orig = tf2::Quaternion(msg->q[1], msg->q[2], msg->q[3], msg->q[0]);
 
-    // } catch (tf2::TransformException &e) {
-    //   printf("ERROR!\n");
-    // }
+    // double r=-3.14159/2, p=0, y=0;  // Rotate the previous pose by 180* about X
+    double r=0, p=0, y=-3.14159/2;  // Rotate the previous pose by 180* about X
+    q_rot.setRPY(r, p, y);
 
-    // //rotor0
-    // t.header.stamp = clock->now();
-    // t.header.frame_id = "base_link";
-    // t.child_frame_id = "rotor_0";
-    // t.transform.translation.x = 0.13;
-    // t.transform.translation.y = -0.22;
-    // t.transform.translation.z = 0.023;
-    // t.transform.rotation.x = 0;
-    // t.transform.rotation.y = 0;
-    // t.transform.rotation.z = 0;
-    // t.transform.rotation.w = 1;
-    // tf_broadcaster_->sendTransform(t);
-    //
-    // //rotor1
-    // t.header.stamp = clock->now();
-    // t.header.frame_id = "base_link";
-    // t.child_frame_id = "rotor_1";
-    // t.transform.translation.x = -0.13;
-    // t.transform.translation.y = 0.22;
-    // t.transform.translation.z = 0.023;
-    // t.transform.rotation.x = 0;
-    // t.transform.rotation.y = 0;
-    // t.transform.rotation.z = 0;
-    // t.transform.rotation.w = 1;
-    // tf_broadcaster_->sendTransform(t);
-    //
-    // //rotor1
-    // t.header.stamp = clock->now();
-    // t.header.frame_id = "base_link";
-    // t.child_frame_id = "rotor_2";
-    // t.transform.translation.x = 0.13;
-    // t.transform.translation.y = 0.22;
-    // t.transform.translation.z = 0.023;
-    // t.transform.rotation.x = 0;
-    // t.transform.rotation.y = 0;
-    // t.transform.rotation.z = 0;
-    // t.transform.rotation.w = 1;
-    // tf_broadcaster_->sendTransform(t);
-    //
-    // //rotor1
-    // t.header.stamp = clock->now();
-    // t.header.frame_id = "base_link";
-    // t.child_frame_id = "rotor_3";
-    // t.transform.translation.x = -0.13;
-    // t.transform.translation.y = -0.22;
-    // t.transform.translation.z = 0.023;
-    // t.transform.rotation.x = 0;
-    // t.transform.rotation.y = 0;
-    // t.transform.rotation.z = 0;
-    // t.transform.rotation.w = 1;
-    // tf_broadcaster_->sendTransform(t);
+    q_new = q_rot*q_orig;  // Calculate the new orientation
+    q_new.normalize();
+
+    // Stuff and publish /odom
+    odom_msg->header.stamp = clock_->now();
+    odom_msg->pose.pose.position.x = msg->y;
+    odom_msg->pose.pose.position.y = msg->x;
+    odom_msg->pose.pose.position.z = -msg->z;
+    odom_msg->pose.pose.orientation.x = q_new.x();
+    odom_msg->pose.pose.orientation.y = q_new.y();
+    odom_msg->pose.pose.orientation.z = q_new.z();
+    odom_msg->pose.pose.orientation.w = q_new.w();
+
+    // Pose covariance (required by robot_pose_ekf) TODO: publish realistic values
+    for (unsigned int i = 0; i < odom_msg->pose.covariance.size(); ++i) {
+      odom_msg->pose.covariance[i] = 0.0;
+    }
+
+
+    // Stuff and publish /tf
+    odom_tf_msg->header.stamp = odom_msg->header.stamp;
+    odom_tf_msg->transform.translation.x = msg->y;
+    odom_tf_msg->transform.translation.y = msg->x;
+    odom_tf_msg->transform.translation.z = -msg->z;
+    odom_tf_msg->transform.rotation.x = q_new.x();
+    odom_tf_msg->transform.rotation.y = q_new.y();
+    odom_tf_msg->transform.rotation.z = q_new.z();
+    odom_tf_msg->transform.rotation.w = q_new.w();
+
+    odom_pub_->publish(std::move(odom_msg));
+    tf_broadcaster_->sendTransform(*odom_tf_msg);
+
   }
   rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr subscription_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   tf2_ros::Buffer buffer;
-  rclcpp::Clock::SharedPtr clock;
+  rclcpp::Clock::SharedPtr clock_;
+
+  std::string odom_frame_;
+  std::string gyro_link_frame_;
+  std::string base_link_frame_;
 };
 
 int main(int argc, char * argv[])
