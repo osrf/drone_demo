@@ -1,4 +1,4 @@
-FROM osrf/ros:dashing-desktop
+FROM osrf/ros2:devel
 
 # Tools I find useful during development
 RUN apt-get update \
@@ -9,12 +9,13 @@ RUN apt-get update \
     python-rosinstall \
     sudo \
     wget \
-    ros-dashing-gazebo-dev \
-    ros-dashing-gazebo-msgs \
-    ros-dashing-gazebo-ros \
-    ros-dashing-gazebo-plugins \
-    ros-dashing-gazebo-ros-pkgs \
-    ros-dashing-xacro \
+    ros-eloquent-gazebo-dev \
+    ros-eloquent-gazebo-msgs \
+    ros-eloquent-gazebo-ros \
+    ros-eloquent-gazebo-plugins \
+    ros-eloquent-gazebo-ros-pkgs \
+    ros-eloquent-xacro \
+    ros-eloquent-desktop \
  && apt-get clean
 
 # Make sure everything is up to date before building from source
@@ -22,7 +23,7 @@ RUN apt-get update \
   && apt-get dist-upgrade -y \
   && apt-get clean
 
-RUN /bin/sh -c 'echo ". /opt/ros/dashing/setup.bash" >> ~/.bashrc' \
+RUN /bin/sh -c 'echo ". /opt/ros/eloquent/setup.bash" >> ~/.bashrc' \
   && /bin/sh -c 'echo ". /usr/share/gazebo/setup.sh" >> ~/.bashrc'
 
 RUN mkdir  /workspace/drone_demo_ros2/src -p
@@ -36,7 +37,7 @@ RUN git clone https://github.com/PX4/px4_msgs.git
 
 RUN apt-get update  && apt-get install python-jinja2 -y && apt-get clean
 
-RUN git clone https://github.com/mavlink/mavlink --recursive && \
+RUN git clone https://github.com/mavlink/mavlink -b 1.0.12 --recursive && \
     git clone https://github.com/mavlink/mavlink-gbp-release && \
     mv mavlink-gbp-release/patch/* mavlink
 
@@ -66,13 +67,34 @@ RUN apt-get update \
   libpulse-mainloop-glib0 \
   pulseaudio \
   && apt-get clean \
-  && pip3 install future
+  && pip3 install catkin-pkg empy toml numpy tk future
 
 ENV FASTRTPSGEN_DIR /workspace/eProsima_FastRTPS-1.7.2-Linux/bin
 
 WORKDIR /workspace/drone_demo_ros2
-RUN . /opt/ros/dashing/setup.sh && colcon build --merge-install --packages-skip ros2_serial_example
-RUN . /workspace/drone_demo_ros2/install/setup.sh && colcon build --merge-install --packages-select ros2_serial_example --cmake-args -DROS2_SERIAL_PKGS="px4_msgs"
+
+# optional dependency for qgc
+RUN apt-get update \
+ && apt-get install -y \
+    speech-dispatcher \
+    libimage-exiftool-perl \
+    gstreamer1.0-libav \
+ && apt-get clean
+
+# optional dependency for camera streaming
+RUN apt-get update \
+ && apt-get install -y \
+    gstreamer1.0-alsa \
+    libgstreamer-plugins-base1.0-dev \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-ugly \
+ && apt-get clean
+
+RUN git config --global  user.name "someone" && git config --global user.email "someone@someplace.com"
+RUN cd src/drone_demo/sitl_launcher && git pull
+RUN . /opt/ros/eloquent/setup.sh && colcon build --merge-install --packages-skip ros2_serial_example --cmake-args -DBUILD_TESTING=False
+RUN . /workspace/drone_demo_ros2/install/setup.sh && colcon build --merge-install --packages-select ros2_serial_example --cmake-args -DBUILD_TESTING=False -DROS2_SERIAL_PKGS="px4_msgs"
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
