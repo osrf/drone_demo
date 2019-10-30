@@ -13,8 +13,6 @@ include(ExternalProject)
 
 set(PX4_TARGET px4_sitl_rtps)
 
-message("Alex: " ${CMAKE_CURRENT_SOURCE_DIR})
-
 set(firmware_path "${CMAKE_CURRENT_SOURCE_DIR}/Firmware")
 ExternalProject_Add(firmware
   GIT_REPOSITORY https://github.com/PX4/Firmware.git
