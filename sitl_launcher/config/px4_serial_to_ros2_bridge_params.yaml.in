@@ -124,3 +124,43 @@
                 serial_mapping: 107
                 type: px4_msgs/CollisionConstraints
                 direction: SerialToROS2
+            vehicle_local_position_setpoint:
+                serial_mapping: 97
+                type: px4_msgs/VehicleLocalPositionSetpoint
+                direction: ROS2ToSerial
+            position_setpoint:
+                serial_mapping: 50
+                type: px4_msgs/PositionSetpoint
+                direction: ROS2ToSerial
+            position_setpoint_triplet:
+                serial_mapping: 51
+                type: px4_msgs/PositionSetpointTriplet
+                direction: ROS2ToSerial
+            vehicle_control_mode:
+                serial_mapping: 92
+                type: px4_msgs/VehicleControlMode
+                direction: ROS2ToSerial
+            debug_vect:
+                serial_mapping: 15
+                type: px4_msgs/DebugVect
+                direction: ROS2ToSerial
+            commander_state:
+                serial_mapping: 10
+                type: px4_msgs/CommanderState
+                direction: ROS2ToSerial
+            vehicle_command:
+                serial_mapping: 89
+                type: px4_msgs/VehicleCommand
+                direction: ROS2ToSerial
+            vehicle_status:
+                serial_mapping: 102
+                type: px4_msgs/VehicleStatus
+                direction: SerialToROS2
+            vehicle_gps_position:
+                serial_mapping: 94
+                type: px4_msgs/VehicleGpsPosition
+                direction: SerialToROS2
+            vehicle_land_detected:
+                serial_mapping: 95
+                type: px4_msgs/VehicleLandDetected
+                direction: SerialToROS2
