@@ -15,6 +15,8 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
 
+  find_package(ament_cmake_gtest REQUIRED)
+
   add_subdirectory(src/system)
 
 endif()

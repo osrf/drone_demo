@@ -25,37 +25,30 @@ from launch.actions import ExecuteProcess, IncludeLaunchDescription, SetEnvironm
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_testing.legacy import LaunchTestService
+import os
+import launch
 
 def generate_launch_description():
 
+    os.environ["PX4_HOME_LAT"] = "37.7332531";
+    os.environ["PX4_HOME_LON"] = "-119.5616378";
+    os.environ["PX4_HOME_ALT"] = "2800.4";
+
     sitl_launcher_dir = get_package_share_directory('sitl_launcher')
+
+    gazebo_dir = get_package_share_directory('gazebo_ros')
+    included_launch = launch.actions.IncludeLaunchDescription(
+                launch.launch_description_sources.PythonLaunchDescriptionSource(gazebo_dir + '/launch/gazebo.launch.py'),
+                launch_arguments={'world': 'worlds/yosemite.world',
+                                  'paused': 'false',
+                                  'physics': 'ode',
+                                  'gui': 'false'}.items()
+                )
 
     return LaunchDescription([
         SetEnvironmentVariable('RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED', '1'),
-
-        # Launch gazebo server for simulation
-        ExecuteProcess(
-            cmd=['gzserver', '-s', 'libgazebo_ros_init.so',
-                 '--minimal_comms', world],
-            output='screen'),
-
-        # TODO(orduno) Launch the robot state publisher instead
-        #              using a local copy of TB3 urdf file
-        Node(
-            package='tf2_ros',
-            node_executable='static_transform_publisher',
-            output='screen',
-            arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'base_link']),
-
-        Node(
-            package='tf2_ros',
-            node_executable='static_transform_publisher',
-            output='screen',
-            arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'base_scan']),
-
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(sitl_launcher_dir, 'launch', 'demo.launch.py'))),
+        included_launch,
+        Node(package='sitl_launcher', node_executable='launch_drone_ros2.py', output='screen', arguments=['--iris', '0']),
     ])
 
 
@@ -64,7 +57,7 @@ def main(argv=sys.argv[1:]):
 
     test1_action = ExecuteProcess(
         cmd=[os.path.join(os.getenv('TEST_DIR'), 'tester_node.py'),
-             '-r', '-2.0', '-0.5', '0.0', '2.0'],
+             '-r', '-2.0', '-10.5', '4.0', '3.1416', '--ros-args', '--remap', '__ns:=/iris_0'],
         name='tester_node',
         output='screen')
 
