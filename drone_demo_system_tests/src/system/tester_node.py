@@ -20,6 +20,7 @@ import sys
 import time
 
 from px4_msgs.msg import VehicleCommand, VehicleGpsPosition
+from px4_msgs.msg import VehicleStatus, VehicleOdometry
 import rclpy
 from rclpy.node import Node
 
@@ -44,60 +45,89 @@ class DroneTester(Node):
                                                          '/vehicle_command',
                                                          1)
 
+        self.vehicle_status_sub = self.create_subscription(VehicleStatus,
+                                                       self.get_namespace() +
+                                                       '/vehicle_status',
+                                                       self.statusCallback, 10)
+
         self.model_pose_sub = self.create_subscription(VehicleGpsPosition,
                                                        self.get_namespace() +
                                                        '/vehicle_gps_position',
                                                        self.poseCallback, 10)
+
+        self.vehicle_odometry_sub = self.create_subscription(VehicleOdometry,
+                                                       self.get_namespace() +
+                                                       '/vehicle_odometry',
+                                                       self.odometryCallback, 10)
+
         self.initial_pose_received = False
         self.current_pose = None
 
+        self.arming_state = -1
+        self.relative_alt = 0
+
+    def arm_vehicle(self, timeout=5, attempts_limit=5):
+        attempt = 0
+        while self.arming_state != VehicleStatus.ARMING_STATE_ARMED:
+            attempt = attempt + 1
+            self.info_msg('Arming vehicle')
+            msg_vehicle_command = VehicleCommand()
+            msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
+            msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM
+            msg_vehicle_command.param1 = 1.0
+            msg_vehicle_command.param2 = 0.0
+            msg_vehicle_command.param3 = 0.0
+            msg_vehicle_command.param4 = 0.0
+            msg_vehicle_command.param5 = 0.0
+            msg_vehicle_command.param6 = 0.0
+            msg_vehicle_command.param7 = 0.0
+            msg_vehicle_command.confirmation = 1
+            msg_vehicle_command.source_system = 255
+            msg_vehicle_command.target_system = self.target_system
+            msg_vehicle_command.target_component = 1
+            msg_vehicle_command.from_external = True
+            print(self.vehicle_command_pub.topic)
+            self.vehicle_command_pub.publish(msg_vehicle_command)
+
+            start_time = time.time()
+            while (time.time() - start_time) < timeout:
+                rclpy.spin_once(self, timeout_sec=1)
+            if (attempt > attempts_limit):
+                return False
+        self.info_msg('Vehicle armed')
+        return True
+
+    def takeoff_vehicle(self, timeout=5, attempts_limit=5):
+        attempt = 0
         while not self.initial_pose_received:
             rclpy.spin_once(self, timeout_sec=0.1)
+        while self.relative_alt < 2:
+            attempt = attempt + 1
 
-        self.arm_vehicle()
-        time.sleep(2)
-        self.takeoff_vehicle()
-        time.sleep(5)
-
-    def arm_vehicle(self):
-        msg_vehicle_command = VehicleCommand()
-        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
-        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM
-        msg_vehicle_command.param1 = 1.0
-        msg_vehicle_command.param2 = 0.0
-        msg_vehicle_command.param3 = 0.0
-        msg_vehicle_command.param4 = 0.0
-        msg_vehicle_command.param5 = 0.0
-        msg_vehicle_command.param6 = 0.0
-        msg_vehicle_command.param7 = 0.0
-        msg_vehicle_command.confirmation = 1
-        msg_vehicle_command.source_system = 255
-        msg_vehicle_command.target_system = self.target_system
-        msg_vehicle_command.target_component = 1
-        msg_vehicle_command.from_external = True
-        print(self.vehicle_command_pub.topic)
-        self.vehicle_command_pub.publish(msg_vehicle_command)
-
-    def takeoff_vehicle(self):
-        while not self.initial_pose_received:
-            rclpy.spin_once(self, timeout_sec=0.1)
-        msg_vehicle_command = VehicleCommand()
-        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
-        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF
-        msg_vehicle_command.param1 = 0.1
-        msg_vehicle_command.param2 = 0.0
-        msg_vehicle_command.param3 = 0.0
-        msg_vehicle_command.param4 = 90.0*3.1416/180
-        msg_vehicle_command.param5 = self.reference_pose[0]
-        msg_vehicle_command.param6 = self.reference_pose[1]
-        msg_vehicle_command.param7 = 3.0
-        msg_vehicle_command.confirmation = 1
-        msg_vehicle_command.source_system = 255
-        msg_vehicle_command.target_system = self.target_system
-        msg_vehicle_command.target_component = 1
-        msg_vehicle_command.from_external = True
-        self.vehicle_command_pub.publish(msg_vehicle_command)
-
+            self.info_msg('Taking off vehicle')
+            msg_vehicle_command = VehicleCommand()
+            msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
+            msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF
+            msg_vehicle_command.param1 = 0.1
+            msg_vehicle_command.param2 = 0.0
+            msg_vehicle_command.param3 = 0.0
+            msg_vehicle_command.param4 = 90.0*3.1416/180
+            msg_vehicle_command.param5 = self.reference_pose[0]
+            msg_vehicle_command.param6 = self.reference_pose[1]
+            msg_vehicle_command.param7 = 3.0
+            msg_vehicle_command.confirmation = 1
+            msg_vehicle_command.source_system = 255
+            msg_vehicle_command.target_system = self.target_system
+            msg_vehicle_command.target_component = 1
+            msg_vehicle_command.from_external = True
+            self.vehicle_command_pub.publish(msg_vehicle_command)
+            start_time = time.time()
+            while (time.time() - start_time) < timeout:
+                rclpy.spin_once(self, timeout_sec=1)
+            if (attempt > attempts_limit):
+                return False
+        self.info_msg('Vehicle flying!')
+        return True
     def info_msg(self, msg: str):
         self.get_logger().info('\033[1;37;44m' + msg + '\033[0m')
 
@@ -130,12 +160,18 @@ class DroneTester(Node):
         self.vehicle_command_pub.publish(msg_vehicle_command)
 
     def poseCallback(self, msg):
-        self.info_msg('Received vehicle_gps_position')
         self.current_pose = msg
         if(not self.initial_pose_received):
+            self.info_msg('Received vehicle_gps_position')
             self.reference_pose = (msg.lat*1e-7, msg.lon*1e-7, msg.alt*1e-3)
             print(self.reference_pose)
         self.initial_pose_received = True
+
+    def statusCallback(self, msg):
+        self.arming_state  = msg.arming_state
+
+    def odometryCallback(self, msg):
+        self.relative_alt  = -msg.z
 
     def reachesGoal(self, timeout, distance):
         goalReached = False
@@ -177,6 +213,10 @@ def test_RobotMovesToGoal(robot_tester):
 def run_all_tests(robot_tester):
     # set transforms to use_sim_time
     result = True
+    if (result):
+        resutl = robot_tester.arm_vehicle()
+    if (result):
+        result = robot_tester.takeoff_vehicle()
     if (result):
         result = test_RobotMovesToGoal(robot_tester)
 
