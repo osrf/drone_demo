@@ -20,7 +20,7 @@ import sys
 import time
 
 from px4_msgs.msg import VehicleCommand, VehicleGpsPosition
-from px4_msgs.msg import VehicleStatus, VehicleOdometry
+from px4_msgs.msg import VehicleStatus, VehicleOdometry, VehicleLandDetected
 import rclpy
 from rclpy.node import Node
 
@@ -60,17 +60,23 @@ class DroneTester(Node):
                                                        '/vehicle_odometry',
                                                        self.odometryCallback, 10)
 
+        self.vehicle_land_sub = self.create_subscription(VehicleLandDetected,
+                                                       self.get_namespace() +
+                                                       '/vehicle_land_detected',
+                                                       self.landCallback, 10)
+
         self.initial_pose_received = False
         self.current_pose = None
 
         self.arming_state = -1
         self.relative_alt = 0
+        self.landed = -1
 
     def arm_vehicle(self, timeout=5, attempts_limit=5):
         attempt = 0
         while self.arming_state != VehicleStatus.ARMING_STATE_ARMED:
             attempt = attempt + 1
-            self.info_msg('Arming vehicle')
+            self.info_msg('Trying to arm vehicle')
             msg_vehicle_command = VehicleCommand()
             msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
             msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM
@@ -103,8 +109,7 @@ class DroneTester(Node):
             rclpy.spin_once(self, timeout_sec=0.1)
         while self.relative_alt < 2:
             attempt = attempt + 1
-
-            self.info_msg('Taking off vehicle')
+            self.info_msg('Trying to takeoff vehicle')
             msg_vehicle_command = VehicleCommand()
             msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
             msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF
@@ -128,6 +133,22 @@ class DroneTester(Node):
                 return False
         self.info_msg('Vehicle flying!')
         return True
+
+    def RTL_vehicle(self, timeout=5, attempts_limit=5):
+        self.goal_pose[0] = 0
+        self.goal_pose[1] = 0
+        self.goal_pose[2] = 0
+        self.info_msg('Trying to return to launch')
+        msg_vehicle_command = VehicleCommand()
+        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
+        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_NAV_RETURN_TO_LAUNCH
+        msg_vehicle_command.confirmation = 1
+        msg_vehicle_command.source_system = 255
+        msg_vehicle_command.target_system = self.target_system
+        msg_vehicle_command.target_component = 1
+        msg_vehicle_command.from_external = True
+        self.vehicle_command_pub.publish(msg_vehicle_command)
+
     def info_msg(self, msg: str):
         self.get_logger().info('\033[1;37;44m' + msg + '\033[0m')
 
@@ -168,10 +189,13 @@ class DroneTester(Node):
         self.initial_pose_received = True
 
     def statusCallback(self, msg):
-        self.arming_state  = msg.arming_state
+        self.arming_state = msg.arming_state
 
     def odometryCallback(self, msg):
-        self.relative_alt  = -msg.z
+        self.relative_alt = -msg.z
+
+    def landCallback(self, msg):
+        self.landed = msg.landed
 
     def reachesGoal(self, timeout, distance):
         goalReached = False
@@ -188,6 +212,21 @@ class DroneTester(Node):
             elif timeout is not None:
                 if (time.time() - start_time) > timeout:
                     self.error_msg('Robot timed out reaching its goal!')
+                    return False
+
+    def reachesRTL(self, timeout, distance):
+        homeReached = False
+        start_time = time.time()
+
+        while not homeReached:
+            rclpy.spin_once(self, timeout_sec=1)
+            if self.landed and self.distanceFromGoal() < distance:
+                homeReached = True
+                self.info_msg('*** RTL REACHED ***')
+                return True
+            elif timeout is not None:
+                if (time.time() - start_time) > timeout:
+                    self.error_msg('Robot timed out reaching its RTL!')
                     return False
 
     def distanceFromGoal(self):
@@ -209,16 +248,29 @@ def test_RobotMovesToGoal(robot_tester):
     robot_tester.info_msg('Waiting 60 seconds for robot to reach goal')
     return robot_tester.reachesGoal(timeout=60, distance=0.5)
 
+def test_ArmVehicle(robot_tester):
+    return robot_tester.arm_vehicle()
+
+
+def test_TakeoffVehicle(robot_tester):
+    return robot_tester.takeoff_vehicle()
+
+
+def test_RTLVehicle(robot_tester):
+    robot_tester.RTL_vehicle()
+    return robot_tester.reachesRTL(timeout=60, distance=0.5)
 
 def run_all_tests(robot_tester):
     # set transforms to use_sim_time
     result = True
     if (result):
-        resutl = robot_tester.arm_vehicle()
+        resutl = test_ArmVehicle(robot_tester)
     if (result):
-        result = robot_tester.takeoff_vehicle()
+        result = test_TakeoffVehicle(robot_tester)
     if (result):
         result = test_RobotMovesToGoal(robot_tester)
+    if (result):
+        result = test_RTLVehicle(robot_tester)
 
     if (result):
         robot_tester.info_msg('Test PASSED')
@@ -286,9 +338,6 @@ def main(argv=sys.argv[1:]):
 
     # Create testers for each robot
     testers = get_testers(args)
-
-    # wait a few seconds to make sure entire stacks are up
-    # time.sleep(10)
 
     # run tests on each robot
     for tester in testers:
