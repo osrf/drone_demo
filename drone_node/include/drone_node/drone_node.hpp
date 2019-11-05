@@ -22,14 +22,21 @@
 #include <px4_msgs/msg/vehicle_land_detected.hpp>
 #include <px4_msgs/msg/vehicle_command.hpp>
 #include <px4_msgs/msg/vehicle_odometry.hpp>
+#include <px4_msgs/msg/vehicle_gps_position.hpp>
 
 #include <sensor_msgs/msg/battery_state.hpp>
 
 #include <nav_msgs/msg/odometry.hpp>
 
+#include <geometry_msgs/msg/pose_stamped.hpp>
+
 #include <proposed_aerial_msgs/msg/flight_mode.hpp>
 #include <proposed_aerial_msgs/msg/global_position.hpp>
 #include <proposed_aerial_msgs/srv/set_flight_mode.hpp>
+
+#include <utils/geodetic_converter.hpp>
+#include <tf2/transform_datatypes.h>
+#include "tf2/utils.h"
 
 using namespace std::chrono_literals;
 
@@ -68,6 +75,11 @@ private:
   // odometry
   rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr vehicle_odometry_sub_;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry_pub_;
+
+  // goal
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_goal_sub_;
+  std::shared_ptr<GeodeticConverter> geodetic_converter;
+  rclcpp::Subscription<px4_msgs::msg::VehicleGpsPosition>::SharedPtr vehicle_gps_position_sub_;
 
 };
 

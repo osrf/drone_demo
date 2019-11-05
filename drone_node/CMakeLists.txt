@@ -17,12 +17,14 @@ find_package(px4_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 include_directories(include)
 
 add_executable(${PROJECT_NAME}
   src/drone_node_main.cpp
   src/drone_node.cpp
+  src/utils/geodetic_converter.cpp
 )
 
 ament_target_dependencies(${PROJECT_NAME}
@@ -32,6 +34,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "nav_msgs"
   "sensor_msgs"
   "geometry_msgs"
+  "tf2_ros"
 )
 
 install(  TARGETS
