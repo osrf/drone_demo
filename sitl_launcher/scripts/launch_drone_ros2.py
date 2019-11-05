@@ -256,11 +256,11 @@ def run_drones(drones):
 
 class DroneSelector:
 
-    def __init__(self):
+    def __init__(self, node):
         from tkinter import Tk, Button, Label, StringVar
         from tkinter.ttk import Combobox
 
-        self.node = rclpy.create_node('spawn_models')
+        self.node = node
 
         self.type_map = {'iris': 2, 'plane': 3, 'typhoon_h480': 4}
 
@@ -311,14 +311,43 @@ class DroneSelector:
 def main():
     SUPPORTED_DRONE_TYPES=['typhoon_h480', 'iris', 'plane']
 
-    rclpy.init(args=sys.argv)
+    parser = argparse.ArgumentParser(description='Spawn a drone')
+    # parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
+    parser.add_argument('--iris', help="What position to start irises in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
+    parser.add_argument('--plane', help="What position to start planes in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
+    parser.add_argument('--typhoon', help="What position to start typhoons in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
+    parser.add_argument('--ros-args', help="ROS 2 arguments", default=[], type=str, nargs="*")
+
+
+    rclpy.init(args=None)
+    node = rclpy.create_node('spawn_models')
+    node.get_logger().info('"%s"' % sys.argv)
+
+    args = parser.parse_args()
+
+    overlap = set(args.iris) & set(args.plane)
+    if overlap:
+        parser.error("iris and plane poses cannot overlap %s" % overlap)
+    overlap = set(args.iris) & set(args.typhoon)
+    if overlap:
+        parser.error("iris and typhoon poses cannot overlap %s" % overlap)
+    overlap = set(args.typhoon) & set(args.plane)
+    if overlap:
+        parser.error("typhoon and plane poses cannot overlap %s" % overlap)
 
     drones = {}
-    ds = DroneSelector()
-    ds.mainloop()
-    drones = ds.drones
-    print("DRONES is", drones)
+    if not (args.iris + args.plane + args.typhoon):
+        ds = DroneSelector(node)
+        ds.mainloop()
+        drones = ds.drones
+        print("DRONES is", drones)
 
+    for id in args.iris:
+        drones[id] = Drone(node, 'iris', starting_poses[id], id)
+    for id in args.plane:
+        drones[id] = Drone(node, 'plane', starting_poses[id], id)
+    for id in args.typhoon:
+        drones[id] = Drone(node, 'typhoon_h480', starting_poses[id], id)
     run_drones(drones)
 
 if __name__ == '__main__':
