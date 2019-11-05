@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-# Copyright 2018 Intel Corporation.
+# Copyright 2019 Open Source Robotics Foundation, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,21 +18,13 @@ import math
 import numpy
 import sys
 import time
-from typing import Optional
 
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import PoseWithCovarianceStamped
-from lifecycle_msgs.srv import GetState
 from px4_msgs.msg import VehicleCommand, VehicleGpsPosition
-
 import rclpy
-
 from rclpy.node import Node
-from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSReliabilityPolicy
-from rclpy.qos import QoSProfile
 
 import pymap3d as pm
+
 
 class DroneTester(Node):
 
@@ -47,11 +39,14 @@ class DroneTester(Node):
 
         print("pose to reach: ", self.goal_pose)
 
-        self.publisher_vehicle_command = self.create_publisher(VehicleCommand,
-                                                        self.get_namespace() + '/vehicle_command', 1)
+        self.vehicle_command_pub = self.create_publisher(VehicleCommand,
+                                                         self.get_namespace() +
+                                                         '/vehicle_command',
+                                                         1)
 
         self.model_pose_sub = self.create_subscription(VehicleGpsPosition,
-                                                       self.get_namespace() + '/vehicle_gps_position',
+                                                       self.get_namespace() +
+                                                       '/vehicle_gps_position',
                                                        self.poseCallback, 10)
         self.initial_pose_received = False
         self.current_pose = None
@@ -65,43 +60,43 @@ class DroneTester(Node):
         time.sleep(5)
 
     def arm_vehicle(self):
-        msg_vehicle_command = VehicleCommand();
-        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0);
-        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM;
-        msg_vehicle_command.param1 = 1.0;
-        msg_vehicle_command.param2 = 0.0;
-        msg_vehicle_command.param3 = 0.0;
-        msg_vehicle_command.param4 = 0.0;
-        msg_vehicle_command.param5 = 0.0;
-        msg_vehicle_command.param6 = 0.0;
-        msg_vehicle_command.param7 = 0.0;
-        msg_vehicle_command.confirmation = 1;
-        msg_vehicle_command.source_system = 255;
+        msg_vehicle_command = VehicleCommand()
+        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
+        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM
+        msg_vehicle_command.param1 = 1.0
+        msg_vehicle_command.param2 = 0.0
+        msg_vehicle_command.param3 = 0.0
+        msg_vehicle_command.param4 = 0.0
+        msg_vehicle_command.param5 = 0.0
+        msg_vehicle_command.param6 = 0.0
+        msg_vehicle_command.param7 = 0.0
+        msg_vehicle_command.confirmation = 1
+        msg_vehicle_command.source_system = 255
         msg_vehicle_command.target_system = self.target_system
-        msg_vehicle_command.target_component = 1;
-        msg_vehicle_command.from_external = True;
-        print(self.publisher_vehicle_command.topic)
-        self.publisher_vehicle_command.publish(msg_vehicle_command);
+        msg_vehicle_command.target_component = 1
+        msg_vehicle_command.from_external = True
+        print(self.vehicle_command_pub.topic)
+        self.vehicle_command_pub.publish(msg_vehicle_command)
 
     def takeoff_vehicle(self):
         while not self.initial_pose_received:
             rclpy.spin_once(self, timeout_sec=0.1)
-        msg_vehicle_command = VehicleCommand();
-        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0);
-        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF;
-        msg_vehicle_command.param1 = 0.1;
-        msg_vehicle_command.param2 = 0.0;
-        msg_vehicle_command.param3 = 0.0;
-        msg_vehicle_command.param4 = 90.0*3.1416/180; #TODO(ahcorde):
-        msg_vehicle_command.param5 = self.reference_pose[0];
-        msg_vehicle_command.param6 = self.reference_pose[1];
-        msg_vehicle_command.param7 = 3.0;
-        msg_vehicle_command.confirmation = 1;
-        msg_vehicle_command.source_system = 255;
+        msg_vehicle_command = VehicleCommand()
+        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
+        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF
+        msg_vehicle_command.param1 = 0.1
+        msg_vehicle_command.param2 = 0.0
+        msg_vehicle_command.param3 = 0.0
+        msg_vehicle_command.param4 = 90.0*3.1416/180
+        msg_vehicle_command.param5 = self.reference_pose[0]
+        msg_vehicle_command.param6 = self.reference_pose[1]
+        msg_vehicle_command.param7 = 3.0
+        msg_vehicle_command.confirmation = 1
+        msg_vehicle_command.source_system = 255
         msg_vehicle_command.target_system = self.target_system
-        msg_vehicle_command.target_component = 1;
-        msg_vehicle_command.from_external = True;
-        self.publisher_vehicle_command.publish(msg_vehicle_command);
+        msg_vehicle_command.target_component = 1
+        msg_vehicle_command.from_external = True
+        self.vehicle_command_pub.publish(msg_vehicle_command)
 
     def info_msg(self, msg: str):
         self.get_logger().info('\033[1;37;44m' + msg + '\033[0m')
@@ -117,22 +112,22 @@ class DroneTester(Node):
         lat, lon, alt = pm.ned2geodetic(*ned3, *self.reference_pose)
         print("Flying to: ")
         print(lat, lon, alt)
-        msg_vehicle_command = VehicleCommand();
-        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0);
-        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_DO_REPOSITION;
-        msg_vehicle_command.param1 = -1.0;
-        msg_vehicle_command.param2 = 1.0;
-        msg_vehicle_command.param3 = 0.0;
-        msg_vehicle_command.param4 = float(self.goal_pose[3]*3.1416/180);
-        msg_vehicle_command.param5 = float(lat);
-        msg_vehicle_command.param6 = float(lon);
-        msg_vehicle_command.param7 = float(self.goal_pose[2]);
-        msg_vehicle_command.confirmation = 0;
-        msg_vehicle_command.source_system = 255;
+        msg_vehicle_command = VehicleCommand()
+        msg_vehicle_command.timestamp = int(self.get_clock().now().nanoseconds/1000.0)
+        msg_vehicle_command.command = VehicleCommand.VEHICLE_CMD_DO_REPOSITION
+        msg_vehicle_command.param1 = -1.0
+        msg_vehicle_command.param2 = 1.0
+        msg_vehicle_command.param3 = 0.0
+        msg_vehicle_command.param4 = float(self.goal_pose[3]*3.1416/180)
+        msg_vehicle_command.param5 = float(lat)
+        msg_vehicle_command.param6 = float(lon)
+        msg_vehicle_command.param7 = float(self.goal_pose[2])
+        msg_vehicle_command.confirmation = 0
+        msg_vehicle_command.source_system = 255
         msg_vehicle_command.target_system = self.target_system
-        msg_vehicle_command.target_component = 1;
-        msg_vehicle_command.from_external = True;
-        self.publisher_vehicle_command.publish(msg_vehicle_command);
+        msg_vehicle_command.target_component = 1
+        msg_vehicle_command.from_external = True
+        self.vehicle_command_pub.publish(msg_vehicle_command)
 
     def poseCallback(self, msg):
         self.info_msg('Received vehicle_gps_position')
@@ -160,7 +155,9 @@ class DroneTester(Node):
                     return False
 
     def distanceFromGoal(self):
-        geodetic_coord = (self.current_pose.lat*1e-7, self.current_pose.lon*1e-7, self.current_pose.alt*1e-3)
+        geodetic_coord = (self.current_pose.lat*1e-7,
+                          self.current_pose.lon*1e-7,
+                          self.current_pose.alt*1e-3)
         x, y, z = pm.geodetic2ned(*geodetic_coord, *self.reference_pose)
         d_x = self.goal_pose[0] - x
         d_y = self.goal_pose[1] - y
@@ -169,11 +166,13 @@ class DroneTester(Node):
         self.info_msg('Distance from goal is: ' + str(distance))
         return distance
 
+
 def test_RobotMovesToGoal(robot_tester):
     robot_tester.info_msg('Setting goal pose')
     robot_tester.setGoalPose()
     robot_tester.info_msg('Waiting 60 seconds for robot to reach goal')
     return robot_tester.reachesGoal(timeout=60, distance=0.5)
+
 
 def run_all_tests(robot_tester):
     # set transforms to use_sim_time
@@ -187,6 +186,7 @@ def run_all_tests(robot_tester):
         robot_tester.error_msg('Test FAILED')
 
     return result
+
 
 # TODO(ahcorde): remove this once tf.transformation is available
 # axis sequences for Euler angles
@@ -205,8 +205,11 @@ _AXES2TUPLE = {
 
 _TUPLE2AXES = dict((v, k) for k, v in _AXES2TUPLE.items())
 
+
 def quaternion_from_euler(ai, aj, ak, axes='sxyz'):
-    """Return quaternion from Euler angles and axis sequence.
+    """
+    Return quaternion from Euler angles and axis sequence.
+
     ai, aj, ak : Euler's roll, pitch and yaw angles
     axes : One of 24 axis sequences as string or encoded tuple
     >>> q = quaternion_from_euler(1, 2, 3, 'ryxz')
@@ -216,7 +219,6 @@ def quaternion_from_euler(ai, aj, ak, axes='sxyz'):
     try:
         firstaxis, parity, repetition, frame = _AXES2TUPLE[axes.lower()]
     except (AttributeError, KeyError):
-        _ = _TUPLE2AXES[axes]
         firstaxis, parity, repetition, frame = axes
 
     i = firstaxis
@@ -258,6 +260,7 @@ def quaternion_from_euler(ai, aj, ak, axes='sxyz'):
 
     return quaternion
 
+
 def fwd_pose(x, y, z, heading):
     ned3 = (x, y, -z)
     reference = (37.7332531, -119.5616378, 2800.4)
@@ -267,6 +270,7 @@ def fwd_pose(x, y, z, heading):
 
     return [lat, lon, alt, heading]
 
+
 def get_testers(args):
     testers = []
 
@@ -274,8 +278,8 @@ def get_testers(args):
         # Requested tester for one robot
         final_x, final_y, final_z, final_heading = args.robot[0]
         tester = DroneTester(
-            goal_pose=[float(final_x), float(final_y),
-                                  float(final_z), float(final_heading)])
+                             goal_pose=[float(final_x), float(final_y),
+                                        float(final_z), float(final_heading)])
         tester.info_msg(
             'Starting tester, robot going from ' + final_x + ', ' + final_y +
             ', ' + final_z + ', ' + final_heading + 'º.')
@@ -286,15 +290,16 @@ def get_testers(args):
     for robot in args.robots:
         namespace, init_x, init_y, final_x, final_y = robot
         tester = DroneTester(
-            namespace=namespace,
-            goal_pose=fwd_pose(float(final_x), float(final_y),
-                            float(final_z), float(final_heading)))
+                             namespace=namespace,
+                             goal_pose=[float(final_x), float(final_y),
+                                        float(final_z), float(final_heading)])
         tester.info_msg(
             'Starting tester for ' + namespace +
             ' going from ' + init_x + ', ' + init_y +
             ' to ' + final_x + ', ' + final_y)
         testers.append(tester)
     return testers
+
 
 def main(argv=sys.argv[1:]):
     # The robot(s) positions from the input arguments
