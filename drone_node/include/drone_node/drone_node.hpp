@@ -21,8 +21,11 @@
 #include <px4_msgs/msg/vehicle_status.hpp>
 #include <px4_msgs/msg/vehicle_land_detected.hpp>
 #include <px4_msgs/msg/vehicle_command.hpp>
+#include <px4_msgs/msg/vehicle_odometry.hpp>
 
 #include <sensor_msgs/msg/battery_state.hpp>
+
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <proposed_aerial_msgs/msg/flight_mode.hpp>
 #include <proposed_aerial_msgs/msg/global_position.hpp>
@@ -62,6 +65,9 @@ private:
     const std::shared_ptr<proposed_aerial_msgs::srv::SetFlightMode::Request> request,
     const std::shared_ptr<proposed_aerial_msgs::srv::SetFlightMode::Response> response);
 
+  // odometry
+  rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr vehicle_odometry_sub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry_pub_;
 
 };
 

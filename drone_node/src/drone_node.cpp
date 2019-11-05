@@ -64,6 +64,33 @@ DroneNode::DroneNode():
               flying_ = !msg->landed;
       });
 
+  odometry_pub_ = create_publisher<nav_msgs::msg::Odometry>("odometry", 10);
+  vehicle_odometry_sub_ = create_subscription<px4_msgs::msg::VehicleOdometry>(
+            "vehicle_odometry",
+            10,
+            [this](px4_msgs::msg::VehicleOdometry::ConstSharedPtr msg) {
+              auto msg_to_send = std::make_unique<nav_msgs::msg::Odometry>();
+              msg_to_send->header.stamp = get_clock()->now();
+              msg_to_send->pose.pose.position.x = msg->x;
+              msg_to_send->pose.pose.position.y = msg->y;
+              msg_to_send->pose.pose.position.z = msg->z;
+              msg_to_send->pose.pose.orientation.x = msg->q[0];
+              msg_to_send->pose.pose.orientation.y = msg->q[1];
+              msg_to_send->pose.pose.orientation.z = msg->q[2];
+              msg_to_send->pose.pose.orientation.w = msg->q[3];
+              for(unsigned int i = 0; i < msg->pose_covariance.size(); i++){
+                msg_to_send->pose.covariance[i] = msg->pose_covariance[i];
+              }
+              msg_to_send->twist.twist.linear.x = msg->vx;
+              msg_to_send->twist.twist.linear.y = msg->vy;
+              msg_to_send->twist.twist.linear.z = msg->vz;
+              msg_to_send->twist.twist.angular.x = msg->rollspeed;
+              msg_to_send->twist.twist.angular.y = msg->pitchspeed;
+              msg_to_send->twist.twist.angular.z = msg->yawspeed;
+              for(unsigned int i = 0; i < msg->velocity_covariance.size(); i++){
+                msg_to_send->twist.covariance[i] = msg->velocity_covariance[i];
+              }
+      });
 
   vehicle_command_pub_ = create_publisher<px4_msgs::msg::VehicleCommand>("vehicle_command", 10);
   global_position_sub_ = create_subscription<proposed_aerial_msgs::msg::GlobalPosition>(
