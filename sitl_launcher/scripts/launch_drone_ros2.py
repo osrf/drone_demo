@@ -150,6 +150,7 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
         'udp_recv_port': 2020 + int(vehicle_id)*2,
         'vehicle_name': px4_sim_model + "_" + vehicle_id,
         'vehicle_id': vehicle_id,
+        'target_system': int(vehicle_id)+1,
         'px4_params': rootfs + '/px4_serial_to_ros2_bridge_params.yaml',
         'odom_params': rootfs + '/odom.yaml',
         'poseX': starting_poses[str(vehicle_id)][0],

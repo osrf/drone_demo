@@ -11,4 +11,5 @@ done
 
 ros2 run sitl_launcher drone_tf_broadcast --ros-args -r __ns:=/%(vehicle_name)s --params-file %(odom_params)s &
 ros2 run tf2_ros static_transform_publisher %(poseX)s %(poseY)s 0 0 0 0 /map /%(vehicle_name)s/odom --ros-args -r use_sim_time:=True -r __ns:=/%(vehicle_name)s &
+ros2 run drone_node drone_node --ros-args --remap __ns:=/%(vehicle_name)s -p target_system:=%(target_system)s &
 ros2 run ros2_serial_example ros2_to_serial_bridge --ros-args --params-file %(px4_params)s -r __ns:=/%(vehicle_name)s >> /dev/null
