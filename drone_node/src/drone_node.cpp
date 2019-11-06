@@ -89,6 +89,7 @@ DroneNode::DroneNode():
               for(unsigned int i = 0; i < msg->velocity_covariance.size(); i++){
                 msg_to_send->twist.covariance[i] = msg->velocity_covariance[i];
               }
+              odometry_pub_->publish(std::move(msg_to_send));
       });
 
   vehicle_command_pub_ = create_publisher<px4_msgs::msg::VehicleCommand>("vehicle_command", 10);
