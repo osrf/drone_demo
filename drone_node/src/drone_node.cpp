@@ -170,6 +170,22 @@ DroneNode::DroneNode():
               }
               vehicle_gps_sensor_pub_->publish(msg_gps);
             });
+
+  vehicle_attitude_pub_ = create_publisher<proposed_aerial_msgs::msg::Attitude>("attitude", 10);
+  vehicle_atitude_sub_ = create_subscription<px4_msgs::msg::VehicleAttitude>(
+            "vehicle_attitude",
+            10,
+            [this](px4_msgs::msg::VehicleAttitude::ConstSharedPtr msg) {
+              proposed_aerial_msgs::msg::Attitude msg_to_send;
+              msg_to_send.header.stamp = get_clock()->now();
+              msg_to_send.orientation.x = msg->q[1];
+              msg_to_send.orientation.y = msg->q[2];
+              msg_to_send.orientation.z = msg->q[3];
+              msg_to_send.orientation.w = msg->q[0];
+
+              msg_to_send.reference_frame_type = proposed_aerial_msgs::msg::Attitude::ENU;
+
+              vehicle_attitude_pub_->publish(msg_to_send);
             });
 
   pose_goal_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>(

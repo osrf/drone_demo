@@ -23,6 +23,7 @@
 #include <px4_msgs/msg/vehicle_command.hpp>
 #include <px4_msgs/msg/vehicle_odometry.hpp>
 #include <px4_msgs/msg/vehicle_gps_position.hpp>
+#include <px4_msgs/msg/vehicle_attitude.hpp>
 
 #include <sensor_msgs/msg/battery_state.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
@@ -34,6 +35,7 @@
 
 #include <proposed_aerial_msgs/msg/flight_mode.hpp>
 #include <proposed_aerial_msgs/msg/global_position.hpp>
+#include <proposed_aerial_msgs/msg/attitude.hpp>
 #include <proposed_aerial_msgs/srv/set_flight_mode.hpp>
 
 #include <utils/geodetic_converter.hpp>
@@ -83,6 +85,10 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_goal_sub_;
   std::shared_ptr<GeodeticConverter> geodetic_converter;
   rclcpp::Subscription<px4_msgs::msg::VehicleGpsPosition>::SharedPtr vehicle_gps_position_sub_;
+
+  // attitude
+  rclcpp::Subscription<px4_msgs::msg::VehicleAttitude>::SharedPtr vehicle_atitude_sub_;
+  rclcpp::Publisher<proposed_aerial_msgs::msg::Attitude>::SharedPtr vehicle_attitude_pub_;
 
 };
 
