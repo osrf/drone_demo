@@ -25,6 +25,8 @@
 #include <px4_msgs/msg/vehicle_gps_position.hpp>
 
 #include <sensor_msgs/msg/battery_state.hpp>
+#include <sensor_msgs/msg/nav_sat_fix.hpp>
+#include <sensor_msgs/msg/nav_sat_status.hpp>
 
 #include <nav_msgs/msg/odometry.hpp>
 
@@ -65,6 +67,7 @@ private:
   // global position flight modes
   rclcpp::Subscription<proposed_aerial_msgs::msg::GlobalPosition>::SharedPtr global_position_sub_;
   rclcpp::Publisher<px4_msgs::msg::VehicleCommand>::SharedPtr vehicle_command_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr vehicle_gps_sensor_pub_;
   int target_system_;
   std::shared_ptr<rclcpp::Service<proposed_aerial_msgs::srv::SetFlightMode>> flight_mode_service_;
   void set_fligh_mode_handle_service(

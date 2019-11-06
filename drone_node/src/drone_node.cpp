@@ -149,7 +149,7 @@ DroneNode::DroneNode():
   flight_mode_service_ = create_service<proposed_aerial_msgs::srv::SetFlightMode>(
       "set_flight_mode", std::bind(&DroneNode::set_fligh_mode_handle_service, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3) );
 
-
+  vehicle_gps_sensor_pub_ = create_publisher<sensor_msgs::msg::NavSatFix>("gps", 10);
   vehicle_gps_position_sub_ = create_subscription<px4_msgs::msg::VehicleGpsPosition>(
             "vehicle_gps_position",
             10,
@@ -157,6 +157,19 @@ DroneNode::DroneNode():
               if(geodetic_converter==nullptr){
                 geodetic_converter = std::make_shared<GeodeticConverter>(msg->lat*1E-7, msg->lon*1E-7, msg->alt*1E-3);
               }
+              sensor_msgs::msg::NavSatFix msg_gps;
+              msg_gps.header.stamp =  get_clock()->now();
+              msg_gps.latitude = msg->lat*1e-7;
+              msg_gps.longitude = msg->lon*1e-7;
+              msg_gps.altitude = msg->alt*1e-3;
+              msg_gps.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
+              if(msg->fix_type == 0 || msg->fix_type == 1){
+                msg_gps.status.status = -1;//sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
+              }else if(msg->fix_type == 2 || msg->fix_type == 3){
+                msg_gps.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+              }
+              vehicle_gps_sensor_pub_->publish(msg_gps);
+            });
             });
 
   pose_goal_sub_ = create_subscription<geometry_msgs::msg::PoseStamped>(
