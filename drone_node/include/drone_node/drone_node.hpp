@@ -65,6 +65,9 @@ private:
   int arming_state_;
   bool flying_;
   int nav_state_;
+  float latitude_;
+  float longitude_;
+  float heading_;
 
   // global position flight modes
   rclcpp::Subscription<proposed_aerial_msgs::msg::GlobalPosition>::SharedPtr global_position_sub_;

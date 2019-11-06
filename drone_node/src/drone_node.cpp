@@ -17,7 +17,6 @@
 DroneNode::DroneNode():
   Node("drone_node")
 {
-
   declare_parameter("target_system");
   get_parameter("target_system", target_system_);
 
@@ -157,6 +156,10 @@ DroneNode::DroneNode():
               if(geodetic_converter==nullptr){
                 geodetic_converter = std::make_shared<GeodeticConverter>(msg->lat*1E-7, msg->lon*1E-7, msg->alt*1E-3);
               }
+
+              latitude_ = msg->lat*1e-7;
+              longitude_ = msg->lon*1e-7;
+
               sensor_msgs::msg::NavSatFix msg_gps;
               msg_gps.header.stamp =  get_clock()->now();
               msg_gps.latitude = msg->lat*1e-7;
@@ -182,6 +185,15 @@ DroneNode::DroneNode():
               msg_to_send.orientation.y = msg->q[2];
               msg_to_send.orientation.z = msg->q[3];
               msg_to_send.orientation.w = msg->q[0];
+
+              geometry_msgs::msg::Quaternion q;
+              q.x = msg_to_send.orientation.x;
+              q.y = msg_to_send.orientation.y;
+              q.z = msg_to_send.orientation.z;
+              q.w = msg_to_send.orientation.w;
+              double yaw, pitch, roll;
+              tf2::getEulerYPR(q, yaw, pitch, roll);
+              heading_ = yaw;
 
               msg_to_send.reference_frame_type = proposed_aerial_msgs::msg::Attitude::ENU;
 
@@ -267,38 +279,84 @@ void DroneNode::set_fligh_mode_handle_service(
   (void)request_header;
   px4_msgs::msg::VehicleCommand msg_vehicle_command;
 
-  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
+  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
+     request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
     //ARM
     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM;
-    msg_vehicle_command.param1 = 1;
+    msg_vehicle_command.param1 = (request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED);
     msg_vehicle_command.confirmation = 1;
     msg_vehicle_command.source_system = 255;
     msg_vehicle_command.target_system = target_system_;
     msg_vehicle_command.target_component = 1;
     msg_vehicle_command.from_external = true;
     vehicle_command_pub_->publish(msg_vehicle_command);
+
+    //TODO(ahcorde): find a way to spin, because we need to arming_state_ updated
+    // int initial_arming_state = arming_state_;
+    //
+    // auto time_point_init = get_clock()->now().seconds();
+    // while(initial_arming_state == arming_state_ &&
+    //    (get_clock()->now().seconds() - time_point_init) < 5){
+    //      std::this_thread::sleep_for (std::chrono::milliseconds(10));
+    // }
+
+    if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
+      if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
+        response->success = true;
+      }
+    }else if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
+      if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
+        response->success = true;
+     }
+   }
   }
-  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
-    if(!flying_){
-      //Takeoff
-      msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
-      msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_TAKEOFF;
-      msg_vehicle_command.param1 = 0.1;
-      msg_vehicle_command.param2 = 0;
-      msg_vehicle_command.param3 = 0;
-      // TODO(ahcorde): review this fields
-      // msg_vehicle_command.param4 = msg->yaw;
-      // msg_vehicle_command.param5 = msg->latitude;
-      // msg_vehicle_command.param6 = msg->longitude;
-      msg_vehicle_command.param7 = 3.0;
-      msg_vehicle_command.confirmation = 1;
-      msg_vehicle_command.source_system = 255;
-      msg_vehicle_command.target_system = target_system_;
-      msg_vehicle_command.target_component = 1;
-      msg_vehicle_command.from_external = true;
-      vehicle_command_pub_->publish(msg_vehicle_command);
-    }
+  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING){
+    msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+    msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_TAKEOFF;
+    msg_vehicle_command.param1 = 0.1;
+    msg_vehicle_command.param2 = 0;
+    msg_vehicle_command.param3 = 0;
+    msg_vehicle_command.param4 = heading_;
+    msg_vehicle_command.param5 = latitude_;
+    msg_vehicle_command.param6 = longitude_;
+    msg_vehicle_command.param7 = 3.0;
+    msg_vehicle_command.confirmation = 1;
+    msg_vehicle_command.source_system = 255;
+    msg_vehicle_command.target_system = target_system_;
+    msg_vehicle_command.target_component = 1;
+    msg_vehicle_command.from_external = true;
+    vehicle_command_pub_->publish(msg_vehicle_command);
+
+    response->success = flying_;
+
+  }
+  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED){
+    msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+    msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND;
+    msg_vehicle_command.param1 = 0.1;
+    msg_vehicle_command.param4 = heading_;
+    msg_vehicle_command.param5 = latitude_;
+    msg_vehicle_command.param6 = longitude_;
+    msg_vehicle_command.confirmation = 1;
+    msg_vehicle_command.source_system = 255;
+    msg_vehicle_command.target_system = target_system_;
+    msg_vehicle_command.target_component = 1;
+    msg_vehicle_command.from_external = true;
+    vehicle_command_pub_->publish(msg_vehicle_command);
+
+    response->success = !flying_;
+  }
+
+
+  if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
+   response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
+  }
+  if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
+   response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
+  }
+  if(flying_){
+    response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
   }
 }
 
