@@ -146,9 +146,6 @@ DroneNode::DroneNode():
               vehicle_command_pub_->publish(msg_vehicle_command);
       });
 
-  flight_mode_service_ = create_service<proposed_aerial_msgs::srv::SetFlightMode>(
-      "set_flight_mode", std::bind(&DroneNode::set_fligh_mode_handle_service, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3) );
-
   vehicle_gps_sensor_pub_ = create_publisher<sensor_msgs::msg::NavSatFix>("gps", 10);
   vehicle_gps_position_sub_ = create_subscription<px4_msgs::msg::VehicleGpsPosition>(
             "vehicle_gps_position",
@@ -252,67 +249,59 @@ DroneNode::DroneNode():
 
       });
 
+  action_flight_mode_server_ = rclcpp_action::create_server<proposed_aerial_msgs::action::SetFlightMode>(
+      this->get_node_base_interface(),
+      this->get_node_clock_interface(),
+      this->get_node_logging_interface(),
+      this->get_node_waitables_interface(),
+      "set_flight_mode",
+      std::bind(&DroneNode::handle_flight_mode_goal, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&DroneNode::handle_flight_mode_cancel, this, std::placeholders::_1),
+      std::bind(&DroneNode::handle_flight_mode_accepted, this, std::placeholders::_1));
+
 }
 
-void DroneNode::flight_mode_timer_callback()
+rclcpp_action::GoalResponse  DroneNode::handle_flight_mode_goal(
+  const rclcpp_action::GoalUUID & uuid,
+  std::shared_ptr<const proposed_aerial_msgs::action::SetFlightMode::Goal> goal)
 {
-  proposed_aerial_msgs::msg::FlightMode msg_to_send;
-
-  if( arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
-    msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
-  }else if(!flying_ && arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
-    msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
-  }else if (flying_){
-    if(nav_state_ == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_AUTO_RTL){
-      msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
-    }else{
-      msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
-    }
-  }
-  flight_mode_pub_->publish(std::move(msg_to_send));
+  RCLCPP_INFO(this->get_logger(), "Received goal request with order %d", goal->goal.flight_mode);
+  (void)uuid;
+  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
-void DroneNode::set_fligh_mode_handle_service(
-  const std::shared_ptr<rmw_request_id_t> request_header,
-  const std::shared_ptr<proposed_aerial_msgs::srv::SetFlightMode::Request> request,
-  const std::shared_ptr<proposed_aerial_msgs::srv::SetFlightMode::Response> response)
+rclcpp_action::CancelResponse  DroneNode::handle_flight_mode_cancel(
+   const std::shared_ptr<rclcpp_action::ServerGoalHandle<proposed_aerial_msgs::action::SetFlightMode>> goal_handle)
 {
-  (void)request_header;
+  RCLCPP_INFO(this->get_logger(), "Received request to cancel goal");
+  (void)goal_handle;
+  return rclcpp_action::CancelResponse::ACCEPT;
+}
+
+void  DroneNode::execute_flight_mode(const std::shared_ptr<rclcpp_action::ServerGoalHandle<proposed_aerial_msgs::action::SetFlightMode>> goal_handle)
+{
+
+  RCLCPP_INFO(this->get_logger(), "execute_flight_mode");
+
+  const auto goal = goal_handle->get_goal();
+  auto feedback = std::make_shared<proposed_aerial_msgs::action::SetFlightMode::Feedback>();
+  auto result = std::make_shared<proposed_aerial_msgs::action::SetFlightMode::Result>();
+  rclcpp::Rate loop_rate(100);
   px4_msgs::msg::VehicleCommand msg_vehicle_command;
 
-  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
-     request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
-    //ARM
-    msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
-    msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM;
-    msg_vehicle_command.param1 = (request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED);
-    msg_vehicle_command.confirmation = 1;
-    msg_vehicle_command.source_system = 255;
-    msg_vehicle_command.target_system = target_system_;
-    msg_vehicle_command.target_component = 1;
-    msg_vehicle_command.from_external = true;
-    vehicle_command_pub_->publish(msg_vehicle_command);
-
-    //TODO(ahcorde): find a way to spin, because we need to arming_state_ updated
-    // int initial_arming_state = arming_state_;
-    //
-    // auto time_point_init = get_clock()->now().seconds();
-    // while(initial_arming_state == arming_state_ &&
-    //    (get_clock()->now().seconds() - time_point_init) < 5){
-    //      std::this_thread::sleep_for (std::chrono::milliseconds(10));
-    // }
-
-    if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
-      if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
-        response->success = true;
-      }
-    }else if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
-      if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
-        response->success = true;
-     }
-   }
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
+      goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
+      //ARM
+      msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+      msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM;
+      msg_vehicle_command.param1 = (goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED);
+      msg_vehicle_command.confirmation = 1;
+      msg_vehicle_command.source_system = 255;
+      msg_vehicle_command.target_system = target_system_;
+      msg_vehicle_command.target_component = 1;
+      msg_vehicle_command.from_external = true;
   }
-  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING){
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING){
     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_TAKEOFF;
     msg_vehicle_command.param1 = 0.1;
@@ -327,12 +316,8 @@ void DroneNode::set_fligh_mode_handle_service(
     msg_vehicle_command.target_system = target_system_;
     msg_vehicle_command.target_component = 1;
     msg_vehicle_command.from_external = true;
-    vehicle_command_pub_->publish(msg_vehicle_command);
-
-    response->success = flying_;
-
   }
-  if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED){
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED){
     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND;
     msg_vehicle_command.param1 = 0.1;
@@ -344,22 +329,188 @@ void DroneNode::set_fligh_mode_handle_service(
     msg_vehicle_command.target_system = target_system_;
     msg_vehicle_command.target_component = 1;
     msg_vehicle_command.from_external = true;
-    vehicle_command_pub_->publish(msg_vehicle_command);
-
-    response->success = !flying_;
   }
 
+  //TODO(ahcorde): find a way to spin, because we need to arming_state_ updated
+  int initial_arming_state = arming_state_;
+  int initial_flying = flying_;
+  vehicle_command_pub_->publish(msg_vehicle_command);
+
+  auto time_point_init = get_clock()->now().seconds();
+  while(initial_arming_state == arming_state_ && initial_flying == flying_ &&
+     (get_clock()->now().seconds() - time_point_init) < 25){
+
+       // Check if there is a cancel request
+       if (goal_handle->is_canceling()) {
+         result->success = false;
+         goal_handle->canceled(result);
+         RCLCPP_INFO(this->get_logger(), "Goal Canceled");
+         return;
+       }
+       if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
+         feedback->state.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
+       }
+       if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
+         feedback->state.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
+       }
+       if(flying_){
+         feedback->state.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
+       }
+       goal_handle->publish_feedback(feedback);
+       loop_rate.sleep();
+  }
+
+
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
+      goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
+    if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
+        if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
+          result->success = true;
+        }
+    }else if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
+        if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
+          result->success = true;
+        }
+    }
+  }
+
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED){
+    result->success = flying_;
+  }
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING){
+    result->success = !flying_;
+  }
 
   if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
-   response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
+    result->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
   }
   if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
-   response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
+    result->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
   }
   if(flying_){
-    response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
+    result->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
   }
+
+  if (rclcpp::ok()) {
+    goal_handle->succeed(result);
+    RCLCPP_INFO(this->get_logger(), "Goal Succeeded");
+  }
+
 }
+
+void  DroneNode::handle_flight_mode_accepted(const std::shared_ptr<rclcpp_action::ServerGoalHandle<proposed_aerial_msgs::action::SetFlightMode>> goal_handle)
+{
+  std::thread{std::bind(&DroneNode::execute_flight_mode, this, std::placeholders::_1), goal_handle}.detach();
+}
+
+void DroneNode::flight_mode_timer_callback()
+{
+  proposed_aerial_msgs::msg::FlightMode msg_to_send;
+
+  if( arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
+    msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
+  }else if(!flying_ && arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
+    msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
+  }else if (flying_){
+    if(nav_state_ == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_AUTO_LAND){
+      msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED;
+    }else if(nav_state_ == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_AUTO_RTL){
+      msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_RTL;
+    }else{
+      msg_to_send.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
+    }
+  }
+  flight_mode_pub_->publish(std::move(msg_to_send));
+}
+//
+// void DroneNode::set_fligh_mode_handle_service(
+//   const std::shared_ptr<rmw_request_id_t> request_header,
+//   const std::shared_ptr<proposed_aerial_msgs::action::SetFlightMode::Request> request,
+//   const std::shared_ptr<proposed_aerial_msgs::action::SetFlightMode::Response> response)
+// {
+//   (void)request_header;
+//   px4_msgs::msg::VehicleCommand msg_vehicle_command;
+//
+//   if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
+//      request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
+//     //ARM
+//     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+//     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM;
+//     msg_vehicle_command.param1 = (request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED);
+//     msg_vehicle_command.confirmation = 1;
+//     msg_vehicle_command.source_system = 255;
+//     msg_vehicle_command.target_system = target_system_;
+//     msg_vehicle_command.target_component = 1;
+//     msg_vehicle_command.from_external = true;
+//     vehicle_command_pub_->publish(msg_vehicle_command);
+//
+//     //TODO(ahcorde): find a way to spin, because we need to arming_state_ updated
+//     // int initial_arming_state = arming_state_;
+//     //
+//     // auto time_point_init = get_clock()->now().seconds();
+//     // while(initial_arming_state == arming_state_ &&
+//     //    (get_clock()->now().seconds() - time_point_init) < 5){
+//     //      std::this_thread::sleep_for (std::chrono::milliseconds(10));
+//     // }
+//
+//     if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
+//       if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
+//         response->success = true;
+//       }
+//     }else if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
+//       if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
+//         response->success = true;
+//      }
+//    }
+//   }
+//   if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING){
+//     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+//     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_TAKEOFF;
+//     msg_vehicle_command.param1 = 0.1;
+//     msg_vehicle_command.param2 = 0;
+//     msg_vehicle_command.param3 = 0;
+//     msg_vehicle_command.param4 = heading_;
+//     msg_vehicle_command.param5 = latitude_;
+//     msg_vehicle_command.param6 = longitude_;
+//     msg_vehicle_command.param7 = 3.0;
+//     msg_vehicle_command.confirmation = 1;
+//     msg_vehicle_command.source_system = 255;
+//     msg_vehicle_command.target_system = target_system_;
+//     msg_vehicle_command.target_component = 1;
+//     msg_vehicle_command.from_external = true;
+//     vehicle_command_pub_->publish(msg_vehicle_command);
+//
+//     response->success = flying_;
+//
+//   }
+//   if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED){
+//     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+//     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND;
+//     msg_vehicle_command.param1 = 0.1;
+//     msg_vehicle_command.param4 = heading_;
+//     msg_vehicle_command.param5 = latitude_;
+//     msg_vehicle_command.param6 = longitude_;
+//     msg_vehicle_command.confirmation = 1;
+//     msg_vehicle_command.source_system = 255;
+//     msg_vehicle_command.target_system = target_system_;
+//     msg_vehicle_command.target_component = 1;
+//     msg_vehicle_command.from_external = true;
+//     vehicle_command_pub_->publish(msg_vehicle_command);
+//
+//     response->success = !flying_;
+//   }
+//
+//
+//   if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
+//    response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
+//   }
+//   if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
+//    response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
+//   }
+//   if(flying_){
+//     response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
+//   }
+// }
 
 DroneNode::~DroneNode()
 {

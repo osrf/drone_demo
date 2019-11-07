@@ -16,6 +16,7 @@
 #define DRONE_NODE__DRONE_NODE_HPP_
 
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 
 #include <px4_msgs/msg/battery_status.hpp>
 #include <px4_msgs/msg/vehicle_status.hpp>
@@ -36,7 +37,7 @@
 #include <proposed_aerial_msgs/msg/flight_mode.hpp>
 #include <proposed_aerial_msgs/msg/global_position.hpp>
 #include <proposed_aerial_msgs/msg/attitude.hpp>
-#include <proposed_aerial_msgs/srv/set_flight_mode.hpp>
+#include <proposed_aerial_msgs/action/set_flight_mode.hpp>
 
 #include <utils/geodetic_converter.hpp>
 #include <tf2/transform_datatypes.h>
@@ -74,11 +75,14 @@ private:
   rclcpp::Publisher<px4_msgs::msg::VehicleCommand>::SharedPtr vehicle_command_pub_;
   rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr vehicle_gps_sensor_pub_;
   int target_system_;
-  std::shared_ptr<rclcpp::Service<proposed_aerial_msgs::srv::SetFlightMode>> flight_mode_service_;
-  void set_fligh_mode_handle_service(
-    const std::shared_ptr<rmw_request_id_t> request_header,
-    const std::shared_ptr<proposed_aerial_msgs::srv::SetFlightMode::Request> request,
-    const std::shared_ptr<proposed_aerial_msgs::srv::SetFlightMode::Response> response);
+  rclcpp_action::Server<proposed_aerial_msgs::action::SetFlightMode>::SharedPtr action_flight_mode_server_;
+  rclcpp_action::GoalResponse handle_flight_mode_goal(
+    const rclcpp_action::GoalUUID & uuid,
+    std::shared_ptr<const proposed_aerial_msgs::action::SetFlightMode::Goal> goal);
+  rclcpp_action::CancelResponse handle_flight_mode_cancel(
+     const std::shared_ptr<rclcpp_action::ServerGoalHandle<proposed_aerial_msgs::action::SetFlightMode>> goal_handle);
+  void execute_flight_mode(const std::shared_ptr<rclcpp_action::ServerGoalHandle<proposed_aerial_msgs::action::SetFlightMode>> goal_handle);
+  void handle_flight_mode_accepted(const std::shared_ptr<rclcpp_action::ServerGoalHandle<proposed_aerial_msgs::action::SetFlightMode>> goal_handle);
 
   // odometry
   rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr vehicle_odometry_sub_;

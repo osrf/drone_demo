@@ -12,6 +12,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(proposed_aerial_msgs REQUIRED)
 find_package(px4_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -29,6 +30,7 @@ add_executable(${PROJECT_NAME}
 
 ament_target_dependencies(${PROJECT_NAME}
   "rclcpp"
+  "rclcpp_action"
   "proposed_aerial_msgs"
   "px4_msgs"
   "nav_msgs"
