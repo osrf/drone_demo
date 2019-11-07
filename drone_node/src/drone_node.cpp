@@ -331,7 +331,16 @@ void  DroneNode::execute_flight_mode(const std::shared_ptr<rclcpp_action::Server
     msg_vehicle_command.from_external = true;
   }
 
-  //TODO(ahcorde): find a way to spin, because we need to arming_state_ updated
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_RTL){
+    msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+    msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_RETURN_TO_LAUNCH;
+    msg_vehicle_command.confirmation = 1;
+    msg_vehicle_command.source_system = 255;
+    msg_vehicle_command.target_system = target_system_;
+    msg_vehicle_command.target_component = 1;
+    msg_vehicle_command.from_external = true;
+  }
+
   int initial_arming_state = arming_state_;
   int initial_flying = flying_;
   vehicle_command_pub_->publish(msg_vehicle_command);
@@ -364,14 +373,14 @@ void  DroneNode::execute_flight_mode(const std::shared_ptr<rclcpp_action::Server
   if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
       goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
     if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
-        if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
-          result->success = true;
-        }
+        result->success = (arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED);
     }else if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
-        if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
-          result->success = true;
-        }
+        result->success = (arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY);
     }
+  }
+
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_RTL){
+    result->success = (nav_state_ == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_AUTO_RTL);
   }
 
   if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED){
@@ -387,6 +396,11 @@ void  DroneNode::execute_flight_mode(const std::shared_ptr<rclcpp_action::Server
   if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
     result->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
   }
+
+  if(nav_state_ == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_AUTO_RTL){
+    result->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_RTL;
+  }
+
   if(flying_){
     result->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
   }
