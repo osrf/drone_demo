@@ -18,6 +18,44 @@ RUN apt-get update \
     ros-eloquent-desktop \
  && apt-get clean
 
+# Micrortps demo dependencies
+# TODO(add as declared dependencies)
+RUN apt-get update \
+&& apt-get install -y \
+  python-future \
+  python3-future \
+  python-lxml \
+  python3-jinja2 -y \
+  openjdk-8-jdk \
+  rsync \
+  python-empy \
+  python-toml \
+  python-numpy \
+  python-catkin-pkg \
+  python3-tk \
+  libpulse-mainloop-glib0 \
+  pulseaudio \
+  && apt-get clean \
+  && pip3 install catkin-pkg empy toml numpy tk future
+
+# optional dependency for qgc
+RUN apt-get update \
+ && apt-get install -y \
+    speech-dispatcher \
+    libimage-exiftool-perl \
+    gstreamer1.0-libav \
+ && apt-get clean
+
+# optional dependency for camera streaming
+RUN apt-get update \
+ && apt-get install -y \
+    gstreamer1.0-alsa \
+    libgstreamer-plugins-base1.0-dev \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-ugly \
+ && apt-get clean
+
 # Make sure everything is up to date before building from source
 RUN apt-get update \
   && apt-get dist-upgrade -y \
@@ -49,47 +87,9 @@ WORKDIR /workspace
 RUN wget https://www.eprosima.com/index.php/component/ars/repository/eprosima-fast-rtps/eprosima-fast-rtps-1-7-2/eprosima_fastrtps-1-7-2-linux-tar-gz?format=raw -O /tmp/fastrtps-1.7.2.tar.gz \
  && tar -xf /tmp/fastrtps-1.7.2.tar.gz
 
-# Micrortps demo dependencies
-# TODO(add as declared dependencies)
-RUN apt-get update \
-&& apt-get install -y \
-  python-future \
-  python3-future \
-  python-lxml \
-  python3-jinja2 -y \
-  openjdk-8-jdk \
-  rsync \
-  python-empy \
-  python-toml \
-  python-numpy \
-  python-catkin-pkg \
-  python3-tk \
-  libpulse-mainloop-glib0 \
-  pulseaudio \
-  && apt-get clean \
-  && pip3 install catkin-pkg empy toml numpy tk future
-
 ENV FASTRTPSGEN_DIR /workspace/eProsima_FastRTPS-1.7.2-Linux/bin
 
 WORKDIR /workspace/drone_demo_ros2
-
-# optional dependency for qgc
-RUN apt-get update \
- && apt-get install -y \
-    speech-dispatcher \
-    libimage-exiftool-perl \
-    gstreamer1.0-libav \
- && apt-get clean
-
-# optional dependency for camera streaming
-RUN apt-get update \
- && apt-get install -y \
-    gstreamer1.0-alsa \
-    libgstreamer-plugins-base1.0-dev \
-    gstreamer1.0-plugins-bad \
-    gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-ugly \
- && apt-get clean
 
 RUN git config --global  user.name "someone" && git config --global user.email "someone@someplace.com"
 RUN cd src/drone_demo/sitl_launcher && git pull
