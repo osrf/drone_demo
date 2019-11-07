@@ -98,4 +98,11 @@ RUN . /workspace/drone_demo_ros2/install/setup.sh && colcon build --merge-instal
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+# optional dependency for camera streaming
+RUN apt-get update \
+ && apt-get install -y \
+    python3-contextlib2 \
+ && apt-get clean
+
 CMD ros2 launch sitl_launcher demo.launch.py
