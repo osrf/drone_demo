@@ -11,7 +11,9 @@
 
   <build_depend>rclcpp</build_depend>
   <build_depend>rclpy</build_depend>
-  <build_depend>visualization_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>proposed_aerial_msgs</build_depend>
   <build_depend>launch_ros</build_depend>
   <build_depend>launch_testing</build_depend>
   <build_depend>gazebo_ros_pkgs</build_depend>
