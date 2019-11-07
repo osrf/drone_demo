@@ -92,7 +92,6 @@ RUN apt-get update \
  && apt-get clean
 
 RUN git config --global  user.name "someone" && git config --global user.email "someone@someplace.com"
-RUN cd src/drone_demo/sitl_launcher && git pull
 RUN . /opt/ros/eloquent/setup.sh && colcon build --merge-install --packages-skip ros2_serial_example --cmake-args -DBUILD_TESTING=False
 RUN . /workspace/drone_demo_ros2/install/setup.sh && colcon build --merge-install --packages-select ros2_serial_example --cmake-args -DBUILD_TESTING=False -DROS2_SERIAL_PKGS="px4_msgs"
 
