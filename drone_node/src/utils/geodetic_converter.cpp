@@ -1,4 +1,4 @@
-#include "rviz_aerial_plugins/utils/geodetic_converter.hpp"
+#include "utils/geodetic_converter.hpp"
 
 GeodeticConverter::GeodeticConverter(double latitude, double longitude, double altitude)
   : home_latitude_(latitude), home_longitude_(longitude), home_altitude_(altitude)
