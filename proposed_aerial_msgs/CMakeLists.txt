@@ -33,13 +33,16 @@ set(msg_files
 )
 
 set(srv_files
-  "srv/SetFlightMode.srv"
 )
 
+set(action_files
+  "action/SetFlightMode.action"
+)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
   ${srv_files}
+  ${action_files}
   DEPENDENCIES
     builtin_interfaces
     geometry_msgs
