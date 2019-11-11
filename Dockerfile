@@ -68,7 +68,7 @@ RUN mkdir  /workspace/drone_demo_ros2/src -p
 WORKDIR /workspace/drone_demo_ros2/src
 RUN git clone https://github.com/ahcorde/drone_demo.git -b ahcorde/ros2
 RUN git clone https://github.com/osrf/sitl_gazebo -b ahcorde/ros2 --recursive
-RUN git clone https://github.com/osrf/uav_testing.git -b ahcorde/ros2
+RUN git clone https://github.com/osrf/uav_testing.git -b ros2
 RUN git clone https://github.com/osrf/rviz_aerial_plugins.git
 RUN git clone https://github.com/osrf/ros2_serial_example.git
 RUN git clone https://github.com/PX4/px4_msgs.git
