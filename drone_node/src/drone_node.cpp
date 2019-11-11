@@ -49,12 +49,26 @@ DroneNode::DroneNode():
   flight_mode_timer_ = this->create_wall_timer(
     100ms, std::bind(&DroneNode::flight_mode_timer_callback, this));
 
+  vehicle_status_pub_ = create_publisher<proposed_aerial_msgs::msg::VehicleStatus>("status", 10);
+
   vehicle_status_sub_ = create_subscription<px4_msgs::msg::VehicleStatus>(
             "vehicle_status",
             10,
             [this](px4_msgs::msg::VehicleStatus::ConstSharedPtr msg) {
               arming_state_ = msg->arming_state;
               nav_state_ = msg->nav_state;
+
+              proposed_aerial_msgs::msg::VehicleStatus msg_status;
+              msg_status.header.stamp = get_clock()->now();
+              msg_status.system_type = msg->vehicle_type;
+              msg_status.engine_failure = msg->engine_failure;
+              msg_status.failsafe = msg->failsafe;
+              msg_status.hil_state = msg->hil_state;
+              if(msg->is_vtol){
+                msg_status.system_type = proposed_aerial_msgs::msg::VehicleStatus::VEHICLE_TYPE_VTOL;
+              }
+              vehicle_status_pub_->publish(msg_status);
+
       });
   vehicle_land_detected_sub_ = create_subscription<px4_msgs::msg::VehicleLandDetected>(
             "vehicle_land_detected",

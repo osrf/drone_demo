@@ -37,6 +37,8 @@
 #include <proposed_aerial_msgs/msg/flight_mode.hpp>
 #include <proposed_aerial_msgs/msg/global_position.hpp>
 #include <proposed_aerial_msgs/msg/attitude.hpp>
+#include <proposed_aerial_msgs/msg/attitude.hpp>
+#include <proposed_aerial_msgs/msg/vehicle_status.hpp>
 #include <proposed_aerial_msgs/action/set_flight_mode.hpp>
 
 #include <utils/geodetic_converter.hpp>
@@ -60,6 +62,7 @@ private:
   // flight mode attributes
   rclcpp::Publisher<proposed_aerial_msgs::msg::FlightMode>::SharedPtr flight_mode_pub_;
   rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr vehicle_status_sub_;
+  rclcpp::Publisher<proposed_aerial_msgs::msg::VehicleStatus>::SharedPtr vehicle_status_pub_;
   rclcpp::Subscription<px4_msgs::msg::VehicleLandDetected>::SharedPtr vehicle_land_detected_sub_;
   rclcpp::TimerBase::SharedPtr flight_mode_timer_;
   void flight_mode_timer_callback();
