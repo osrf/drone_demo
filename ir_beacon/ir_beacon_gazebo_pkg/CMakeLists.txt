@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.5)
+cmake_minimum_required(VERSION 3.5)
 project(ir_beacon_gazebo_pkg)
 
 # Default to C++14
@@ -9,6 +9,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -fpermissive)
 endif()
 
+find_package(ament_cmake REQUIRED)
 find_package(gazebo_dev REQUIRED)
 find_package(gazebo_msgs REQUIRED)
 find_package(gazebo_ros REQUIRED)
@@ -27,9 +28,14 @@ ament_target_dependencies(gazebo_irsensor_plugin
 install(DIRECTORY
   worlds
   models
+  launch
  DESTINATION share/${PROJECT_NAME}
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+install(TARGETS
+  gazebo_irsensor_plugin
+ ARCHIVE DESTINATION lib
+ LIBRARY DESTINATION lib
+ RUNTIME DESTINATION bin)
 
-target_link_libraries(gazebo_irsensor_plugin ${GAZEBO_libraries})
+ament_package()
