@@ -26,8 +26,11 @@
 #include <gazebo/sensors/CameraSensor.hh>
 #include <gazebo/rendering/Camera.hh>
 
-#include <ros/ros.h>
-#include <ir_beacon/Targets.h>
+#include <gazebo_ros/node.hpp>
+#include <gazebo_ros/utils.hpp>
+
+#include <rclcpp/rclcpp.hpp>
+#include <ir_beacon_msgs/msg/targets.hpp>
 
 namespace gazebo
 {
@@ -52,7 +55,7 @@ namespace gazebo
     /// \brief Callback for new IR targets are specified
     /// \param[in] _msg Targets message containing a string array field
     /// named 'targets'
-    public: void TargetCallback(const ir_beacon::Targets::ConstPtr &_msg);
+    public: void TargetCallback(const ir_beacon_msgs::msg::Targets::SharedPtr _msg);
 
     /// \brief Pointer to parent sensor
     private: sensors::CameraSensorPtr parentSensor;
@@ -60,15 +63,15 @@ namespace gazebo
     /// \brief Pointer to parent sensor's camera
     private: rendering::CameraPtr camera;
 
-    /// \brief switcher the material of objects in camera view for simulating 
+    /// \brief switcher the material of objects in camera view for simulating
     /// IR camera
     private: IRMaterialHandlerPtr materialHandler;
 
     /// \brief ROS node handle
-    private: ros::NodeHandle nh;
+    private: gazebo_ros::Node::SharedPtr ros_node_;
 
     /// \brief ROS subscriber to IR target topic
-    private: ros::Subscriber sub;
+    private: rclcpp::Subscription<ir_beacon_msgs::msg::Targets>::SharedPtr sub_;
   };
 }
 #endif

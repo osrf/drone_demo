@@ -37,7 +37,7 @@ namespace gazebo
     /// \brief Destructor
     public: ~IRMaterialHandler() = default;
 
-    /// \brief Set the material scheme that will be applied to camera 
+    /// \brief Set the material scheme that will be applied to camera
     /// \param[in] _scheme Name of material scheme
     public: void SetMaterialScheme(const std::string &_scheme);
 
@@ -486,11 +486,14 @@ void IRSensorPlugin::Load(sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
   this->materialHandler->SetMaterialScheme("IR");
   this->materialHandler->SetTargets(targets);
 
+  ros_node_ = gazebo_ros::Node::Get(_sdf);
+
   // setup ROS callback
-  if (ros::isInitialized())
+  if (rclcpp::ok())
   {
-    this->sub = this->nh.subscribe("ir_targets", 10,
-        &IRSensorPlugin::TargetCallback, this);
+    sub_ = ros_node_->create_subscription<ir_beacon_msgs::msg::Targets>(
+      "ir_targets", rclcpp::QoS(rclcpp::KeepLast(1)),
+      std::bind(&IRSensorPlugin::TargetCallback, this, std::placeholders::_1));
   }
   else
   {
@@ -501,7 +504,7 @@ void IRSensorPlugin::Load(sensors::SensorPtr _sensor, sdf::ElementPtr _sdf)
 
 /////////////////////////////////////////////////
 void IRSensorPlugin::TargetCallback(
-    const ir_beacon::Targets::ConstPtr &_msg)
+    const ir_beacon_msgs::msg::Targets::SharedPtr _msg)
 {
   if (_msg->targets.empty())
     return;
