@@ -60,6 +60,7 @@ add_message_files(
   OdometryWithAcceleration.msg
   UpperTriangularCovariance.msg
   UpperTriangularCovariance3.msg
+  VehicleStatus.msg
 )
 
 ## Generate services in the 'srv' folder
