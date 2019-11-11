@@ -99,8 +99,6 @@ private:
   // attitude
   rclcpp::Subscription<px4_msgs::msg::VehicleAttitude>::SharedPtr vehicle_atitude_sub_;
   rclcpp::Publisher<proposed_aerial_msgs::msg::Attitude>::SharedPtr vehicle_attitude_pub_;
-
 };
-
 
 #endif // DRONE_DEMO__DRONE_DEMO_HPP_

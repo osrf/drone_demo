@@ -306,14 +306,14 @@ void  DroneNode::execute_flight_mode(const std::shared_ptr<rclcpp_action::Server
   if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
       goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
       //ARM
-      msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
-      msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM;
-      msg_vehicle_command.param1 = (goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED);
-      msg_vehicle_command.confirmation = 1;
-      msg_vehicle_command.source_system = 255;
-      msg_vehicle_command.target_system = target_system_;
-      msg_vehicle_command.target_component = 1;
-      msg_vehicle_command.from_external = true;
+    msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
+    msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM;
+    msg_vehicle_command.param1 = (goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED);
+    msg_vehicle_command.confirmation = 1;
+    msg_vehicle_command.source_system = 255;
+    msg_vehicle_command.target_system = target_system_;
+    msg_vehicle_command.target_component = 1;
+    msg_vehicle_command.from_external = true;
   }
   if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING){
     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
@@ -450,95 +450,6 @@ void DroneNode::flight_mode_timer_callback()
   }
   flight_mode_pub_->publish(std::move(msg_to_send));
 }
-//
-// void DroneNode::set_fligh_mode_handle_service(
-//   const std::shared_ptr<rmw_request_id_t> request_header,
-//   const std::shared_ptr<proposed_aerial_msgs::action::SetFlightMode::Request> request,
-//   const std::shared_ptr<proposed_aerial_msgs::action::SetFlightMode::Response> response)
-// {
-//   (void)request_header;
-//   px4_msgs::msg::VehicleCommand msg_vehicle_command;
-//
-//   if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
-//      request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
-//     //ARM
-//     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
-//     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_COMPONENT_ARM_DISARM;
-//     msg_vehicle_command.param1 = (request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED);
-//     msg_vehicle_command.confirmation = 1;
-//     msg_vehicle_command.source_system = 255;
-//     msg_vehicle_command.target_system = target_system_;
-//     msg_vehicle_command.target_component = 1;
-//     msg_vehicle_command.from_external = true;
-//     vehicle_command_pub_->publish(msg_vehicle_command);
-//
-//     //TODO(ahcorde): find a way to spin, because we need to arming_state_ updated
-//     // int initial_arming_state = arming_state_;
-//     //
-//     // auto time_point_init = get_clock()->now().seconds();
-//     // while(initial_arming_state == arming_state_ &&
-//     //    (get_clock()->now().seconds() - time_point_init) < 5){
-//     //      std::this_thread::sleep_for (std::chrono::milliseconds(10));
-//     // }
-//
-//     if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED){
-//       if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
-//         response->success = true;
-//       }
-//     }else if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
-//       if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
-//         response->success = true;
-//      }
-//    }
-//   }
-//   if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING){
-//     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
-//     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_TAKEOFF;
-//     msg_vehicle_command.param1 = 0.1;
-//     msg_vehicle_command.param2 = 0;
-//     msg_vehicle_command.param3 = 0;
-//     msg_vehicle_command.param4 = heading_;
-//     msg_vehicle_command.param5 = latitude_;
-//     msg_vehicle_command.param6 = longitude_;
-//     msg_vehicle_command.param7 = 3.0;
-//     msg_vehicle_command.confirmation = 1;
-//     msg_vehicle_command.source_system = 255;
-//     msg_vehicle_command.target_system = target_system_;
-//     msg_vehicle_command.target_component = 1;
-//     msg_vehicle_command.from_external = true;
-//     vehicle_command_pub_->publish(msg_vehicle_command);
-//
-//     response->success = flying_;
-//
-//   }
-//   if(request->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_LANDED){
-//     msg_vehicle_command.timestamp = get_clock()->now().nanoseconds()/1000;
-//     msg_vehicle_command.command = px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_LAND;
-//     msg_vehicle_command.param1 = 0.1;
-//     msg_vehicle_command.param4 = heading_;
-//     msg_vehicle_command.param5 = latitude_;
-//     msg_vehicle_command.param6 = longitude_;
-//     msg_vehicle_command.confirmation = 1;
-//     msg_vehicle_command.source_system = 255;
-//     msg_vehicle_command.target_system = target_system_;
-//     msg_vehicle_command.target_component = 1;
-//     msg_vehicle_command.from_external = true;
-//     vehicle_command_pub_->publish(msg_vehicle_command);
-//
-//     response->success = !flying_;
-//   }
-//
-//
-//   if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_STANDBY){
-//    response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED;
-//   }
-//   if(arming_state_ == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED){
-//    response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED;
-//   }
-//   if(flying_){
-//     response->result.flight_mode = proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_FLYING;
-//   }
-// }
 
 DroneNode::~DroneNode()
 {
