@@ -30,6 +30,7 @@ set(msg_files
   msg/OdometryWithAcceleration.msg
   msg/UpperTriangularCovariance.msg
   msg/UpperTriangularCovariance3.msg
+  msg/VehicleStatus.msg
 )
 
 set(srv_files
