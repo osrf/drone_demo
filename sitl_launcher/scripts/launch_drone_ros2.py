@@ -16,9 +16,7 @@ import tempfile
 
 # from em import Interpreter
 from gazebo_msgs.srv import DeleteModel
-# from gazebo_msgs.srv import DeleteModelRequest
 from gazebo_msgs.srv import SpawnEntity
-# from gazebo_msgs.srv import SpawnModelRequest
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 
 import rclpy
@@ -56,8 +54,8 @@ def spawn_model(node, model_name, model_xml,
     while not cli.wait_for_service(timeout_sec=1.0):
         print('service not available, waiting again...')
 
-    # if debug:
-    #     print(model_xml)
+    if debug:
+        print(model_xml)
 
     req = SpawnEntity.Request()
     req.name = model_name
@@ -80,32 +78,7 @@ def spawn_model(node, model_name, model_xml,
     else:
         print(resp.status_message, file=sys.stderr)
         return 1
-#
-# def delete_model(model_name, ros_master_uri=None, robot_namespace=None,
-#     service_name='/gazebo/delete_model'):
-#
-#     if ros_master_uri:
-#         original_uri = os.environ[ROS_MASTER_URI]
-#         os.environ[ROS_MASTER_URI] = ros_master_uri
-#     wait_for_service(service_name)
-#     srv = ServiceProxy(service_name, DeleteModel)
-#
-#     req = DeleteModelRequest()
-#     req.model_name = model_name
-#
-#     resp = srv(req)
-#
-#     if ros_master_uri:
-#         os.environ[ROS_MASTER_URI] = original_uri
-#
-#     if resp.success:
-#         print(resp.status_message, '(%s)' % model_name)
-#         return 0
-#     else:
-#         print(resp.status_message, file=sys.stderr)
-#         return 1
-#
-#
+
 def get_px4_dir():
     return get_package_share_directory('px4')
 
@@ -123,8 +96,7 @@ def run_px4(rootfs, rc_script='etc/init.d-posix/rcS', px4_sim_model='iris', vehi
     if rootfs is set use that for the rootfs, otherwise run in a temporary directory.
     """
     if not rootfs:
-
-            return run_px4(rc_script, px4_sim_model, tempdir)
+        return run_px4(rc_script, px4_sim_model, tempdir)
 
     print("using rootfs ", rootfs)
     seed_rootfs(rootfs)
@@ -313,12 +285,10 @@ def main():
     SUPPORTED_DRONE_TYPES=['typhoon_h480', 'iris', 'plane']
 
     parser = argparse.ArgumentParser(description='Spawn a drone')
-    # parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
     parser.add_argument('--iris', help="What position to start irises in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
     parser.add_argument('--plane', help="What position to start planes in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
     parser.add_argument('--typhoon', help="What position to start typhoons in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
     parser.add_argument('--ros-args', help="ROS 2 arguments", default=[], type=str, nargs="*")
-
 
     rclpy.init(args=None)
     node = rclpy.create_node('spawn_models')
