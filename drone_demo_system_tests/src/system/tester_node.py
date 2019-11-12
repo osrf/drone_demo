@@ -38,11 +38,19 @@ class DroneTester(Node):
     def __init__(
         self,
         goal_pose: [0, 0, 0, 0],
+        tolerance_position: [0.5],
+        timeout: [60],
+        altitude_torelance: [0.2]
     ):
         super().__init__(node_name='drone_tester')
 
         self.target_system = 1
-        self.goal_pose = goal_pose
+        self.goal_pose_array = goal_pose
+        self.timeout_array = timeout
+        self.tolerance_position_array = tolerance_position
+        self.number_of_goals = len(self.goal_pose_array)
+        self.index_of_goals = 0
+        self.goal_pose = self.goal_pose_array[self.index_of_goals]
 
         print("pose to reach: ", self.goal_pose)
 
@@ -164,15 +172,22 @@ class DroneTester(Node):
 
         return [qx, qy, qz, qw]
 
-    def setGoalPose(self):
+    def setGoalPose(self, index_of_goal):
           msg = PoseStamped();
           msg.header.stamp = self.get_clock().now().to_msg();
 
-          msg.pose.position.x = self.goal_pose[0]
-          msg.pose.position.y = self.goal_pose[1]
-          msg.pose.position.z = self.goal_pose[2]
+          self.goal_pose = self.goal_pose_array[index_of_goal]
 
-          q = self.euler_to_quaternion(-self.goal_pose[3]+1.57, 0, 0)
+          self.info_msg(
+            'Starting tester, robot going from ' + self.goal_pose[0] + ', ' + self.goal_pose[1] +
+            ', ' + self.goal_pose[2] + ', ' + self.goal_pose[3] + 'º. Timeout: '
+            + str(self.timeout_array[index_of_goal][0]) + ", Tolerance: " + str(self.tolerance_position_array[index_of_goal][0]) )
+
+          msg.pose.position.x = float(self.goal_pose[1])
+          msg.pose.position.y = float(self.goal_pose[0])
+          msg.pose.position.z = float(self.goal_pose[2])
+
+          q = self.euler_to_quaternion(-float(self.goal_pose[3])+1.57, 0, 0)
 
           msg.pose.orientation.x = q[0]
           msg.pose.orientation.y = q[1];
@@ -244,9 +259,9 @@ class DroneTester(Node):
                           self.current_pose.longitude,
                           self.current_pose.altitude)
         x, y, z = pm.geodetic2ned(*geodetic_coord, *self.reference_pose)
-        d_x = self.goal_pose[0] - x
-        d_y = self.goal_pose[1] - y
-        d_z = self.goal_pose[2] + z
+        d_x = float(self.goal_pose[0]) - x
+        d_y = float(self.goal_pose[1]) - y
+        d_z = float(self.goal_pose[2]) + z
         distance = math.sqrt(d_x * d_x + d_y * d_y + d_z * d_z)
         self.info_msg('Distance from goal is: ' + str(distance))
         return distance
@@ -255,10 +270,14 @@ class DroneTester(Node):
         return self.current_pose.altitude - self.altitude_ref
 
 def test_RobotMovesToGoal(robot_tester):
-    robot_tester.info_msg('Setting goal pose')
-    robot_tester.setGoalPose()
-    robot_tester.info_msg('Waiting 60 seconds for robot to reach goal')
-    return robot_tester.reachesGoal(timeout=60, distance=0.5)
+    for number_of_goal in range(robot_tester.number_of_goals):
+        robot_tester.info_msg('Setting goal pose %d' % number_of_goal)
+        robot_tester.setGoalPose(number_of_goal)
+        robot_tester.info_msg('Waiting %d seconds for robot to reach goal' % float(robot_tester.timeout_array[number_of_goal][0]))
+        if(not robot_tester.reachesGoal(timeout=float(robot_tester.timeout_array[number_of_goal][0]),
+                                        distance=float(robot_tester.tolerance_position_array[number_of_goal][0]))):
+            return False
+    return True
 
 
 def test_ArmVehicle(robot_tester):
@@ -300,42 +319,27 @@ def get_testers(args):
 
     if args.robot:
         # Requested tester for one robot
-        final_x, final_y, final_z, final_heading = args.robot[0]
-        tester = DroneTester(
-                             goal_pose=[float(final_x), float(final_y),
-                                        float(final_z), float(final_heading)])
-        tester.info_msg(
-            'Starting tester, robot going from ' + final_x + ', ' + final_y +
-            ', ' + final_z + ', ' + final_heading + 'º.')
+        tester = DroneTester(goal_pose=args.robot,
+                             timeout=args.timeout,
+                             tolerance_position=args.tolerance_position)
         testers.append(tester)
         return testers
-
-    # Requested tester for multiple robots
-    for robot in args.robots:
-        namespace, init_x, init_y, final_x, final_y = robot
-        tester = DroneTester(
-                             namespace=namespace,
-                             goal_pose=[float(final_x), float(final_y),
-                                        float(final_z), float(final_heading)])
-        tester.info_msg(
-            'Starting tester for ' + namespace +
-            ' going from ' + init_x + ', ' + init_y +
-            ' to ' + final_x + ', ' + final_y)
-        testers.append(tester)
     return testers
 
 
 def main(argv=sys.argv[1:]):
     # The robot(s) positions from the input arguments
     parser = argparse.ArgumentParser(description='System-level drone demo tester node')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-r', '--robot', action='append', nargs=4,
+    # group = parser.add_mutually_exclusive_group(required=False)
+    parser.add_argument('-r', '--robot', action='append', nargs=4,
                        metavar=('final_x', 'final_y', 'final_z', 'final_heading'),
                        help='The robot final position.')
-    group.add_argument('-rs', '--robots', action='append', nargs=5,
-                       metavar=('name', 'final_x', 'final_y', 'final_z', 'final_heading'),
-                       help="The robot's namespace and final position. " +
-                            'Repeating the argument for multiple robots is supported.')
+    parser.add_argument('-tol', '--tolerance_position', action='append', nargs=1,
+                       metavar=('tolerance_position'),
+                       help='Tolerance position.')
+    parser.add_argument('-t', '--timeout', action='append', nargs=1,
+                       metavar=('time_out'),
+                       help='Time out')
 
     args, unknown = parser.parse_known_args()
 
