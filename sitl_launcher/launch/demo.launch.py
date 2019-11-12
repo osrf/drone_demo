@@ -29,16 +29,62 @@ from launch.utilities import perform_substitutions, normalize_to_list_of_substit
 
 from launch.actions import IncludeLaunchDescription
 from launch import LaunchDescriptionSource
+from launch.substitutions import PythonExpression
+from typing import Dict
+from typing import List
+from typing import Text
+
+class ReplaceWorldString(launch.Substitution):
+  """
+  Substitution that replaces strings on a given file.
+  """
+
+  def __init__(self,
+    sitl_world: launch.SomeSubstitutionsType) -> None:
+    super().__init__()
+
+    from launch.utilities import normalize_to_list_of_substitutions  # import here to avoid loop
+    self.__sitl_world = normalize_to_list_of_substitutions(sitl_world)
+    print("ReplaceWorldString ",self.__sitl_world)
+
+  @property
+  def name(self) -> List[launch.Substitution]:
+    """Getter for name."""
+    return self.__sitl_world
+
+  def perform(self, context: launch.LaunchContext) -> Text:
+
+      sitl_world = launch.utilities.perform_substitutions(context, self.name)
+
+      if(sitl_world=="yosemite"):
+          pkg_shared_directory = 'yosemite_valley'
+          launch_file = 'drone_yosemite.launch.py'
+      elif(sitl_world=="mcmillan"):
+          pkg_shared_directory = 'mcmillan_airfield'
+          launch_file = 'drone_mcmillan.launch.py'
+      elif(sitl_world=="ksql"):
+          pkg_shared_directory = 'ksql_airport'
+          launch_file = 'drone_ksql.launch.py'
+      elif(sitl_world=="baylands"):
+          pkg_shared_directory = 'baylands'
+          launch_file = 'drone_baylands.launch.py'
+
+      world_dir = get_package_share_directory(pkg_shared_directory)
+      return world_dir + '/launch/' + launch_file
+
 
 def generate_launch_description():
 
-    pkg_shared_directory = "yosemite_valley"
-    launch_file = 'drone_yosemite.launch.py'
+    declare_sitl_world_cmd = DeclareLaunchArgument(
+        'sitl_world',
+        default_value='yosemite',
+        description='World [yosemite, mcmillan, ksql, baylands]')
 
-    world_dir = get_package_share_directory(pkg_shared_directory)
+    sitl_world = ReplaceWorldString(sitl_world=launch.substitutions.LaunchConfiguration('sitl_world'))
+
     included_launch = launch.actions.IncludeLaunchDescription(
         launch.launch_description_sources.PythonLaunchDescriptionSource(
-                world_dir + '/launch/' + launch_file))
+                sitl_world))
 
     use_rviz = LaunchConfiguration('use_rviz')
     declare_use_rviz_cmd = DeclareLaunchArgument(
@@ -76,5 +122,6 @@ def generate_launch_description():
     ld.add_action(start_rviz_cmd)
     ld.add_action(declare_use_qgroundcontrol_cmd)
     ld.add_action(start_qgroundcontrol_cmd)
+    ld.add_action(declare_sitl_world_cmd)
 
     return ld
