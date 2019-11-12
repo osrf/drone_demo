@@ -330,9 +330,8 @@ def get_testers(args):
 def main(argv=sys.argv[1:]):
     # The robot(s) positions from the input arguments
     parser = argparse.ArgumentParser(description='System-level drone demo tester node')
-    # group = parser.add_mutually_exclusive_group(required=False)
     parser.add_argument('-r', '--robot', action='append', nargs=4,
-                       metavar=('final_x', 'final_y', 'final_z', 'final_heading'),
+                       metavar=('x', 'y', 'z', 'heading'),
                        help='The robot final position.')
     parser.add_argument('-tol', '--tolerance_position', action='append', nargs=1,
                        metavar=('tolerance_position'),
