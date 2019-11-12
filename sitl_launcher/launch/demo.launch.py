@@ -45,7 +45,6 @@ class ReplaceWorldString(launch.Substitution):
 
     from launch.utilities import normalize_to_list_of_substitutions  # import here to avoid loop
     self.__sitl_world = normalize_to_list_of_substitutions(sitl_world)
-    print("ReplaceWorldString ",self.__sitl_world)
 
   @property
   def name(self) -> List[launch.Substitution]:
