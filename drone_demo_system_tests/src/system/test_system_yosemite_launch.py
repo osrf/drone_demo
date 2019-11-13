@@ -55,7 +55,8 @@ def main(argv=sys.argv[1:]):
 
     test1_action = ExecuteProcess(
         cmd=[os.path.join(os.getenv('TEST_DIR'), 'tester_node.py'),
-             '-r', '-2.0', '-10.5', '4.0', '3.1416',
+             '-r', '-2.0', '-10.5', '4.0', '3.1416', '-t', '40', '-tol', '0.4',
+             '-r', '2.0', '10.5', '4.0', '3.1416', '-t', '40', '-tol', '0.4',
              '--ros-args', '--remap', '__ns:=/iris_0'],
         name='tester_node',
         output='screen')
