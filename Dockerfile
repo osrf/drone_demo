@@ -104,4 +104,4 @@ RUN apt-get update \
     python3-contextlib2 \
  && apt-get clean
 
-CMD ros2 launch sitl_launcher demo.launch.py use_rviz:=true use_qgroundcontrol:=true gui:=true verbose:=true
+CMD ros2 launch sitl_launcher demo.launch.py use_rviz:=true use_qgroundcontrol:=true gui:=true verbose:=true sitl_world:=yosemite
