@@ -383,6 +383,13 @@ void  DroneNode::execute_flight_mode(const std::shared_ptr<rclcpp_action::Server
        loop_rate.sleep();
   }
 
+  if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_RTL){
+    int initial_nav_state = nav_state_;
+    while(initial_nav_state == nav_state_ &&
+       (get_clock()->now().seconds() - time_point_init) < 25){
+         loop_rate.sleep();
+       }
+   }
 
   if(goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_ARMED ||
       goal->goal.flight_mode == proposed_aerial_msgs::msg::FlightMode::FLIGHT_MODE_DISARMED){
