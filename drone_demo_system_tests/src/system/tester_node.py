@@ -40,7 +40,6 @@ class DroneTester(Node):
         goal_pose: [0, 0, 0, 0],
         tolerance_position: [0.5],
         timeout: [60],
-        altitude_torelance: [0.2]
     ):
         super().__init__(node_name='drone_tester')
 
@@ -52,7 +51,7 @@ class DroneTester(Node):
         self.index_of_goals = 0
         self.goal_pose = self.goal_pose_array[self.index_of_goals]
 
-        print("pose to reach: ", self.goal_pose)
+        # print("pose to reach: ", self.goal_pose)
 
         self.set_flight_mode_action_client = ActionClient(self, SetFlightMode, 'set_flight_mode')
 
@@ -120,6 +119,10 @@ class DroneTester(Node):
 
     def arm_vehicle(self):
         self.info_msg("arming vehicle")
+
+        while(self.current_pose == None):
+            rclpy.spin_once(self, timeout_sec=0.1)
+
         self.send_goal(FlightMode.FLIGHT_MODE_ARMED)
         self.action_response_received = False
 
@@ -153,6 +156,13 @@ class DroneTester(Node):
         self.info_msg("RTL vehicle")
         self.send_goal(FlightMode.FLIGHT_MODE_RTL)
         self.action_response_received = False
+
+        while(not self.action_response_received):
+            rclpy.spin_once(self, timeout_sec=0.1)
+        self.info_msg("RTL vehicle response received")
+
+        return (self.action_response_result == FlightMode.FLIGHT_MODE_RTL)
+
 
     def info_msg(self, msg: str):
         self.get_logger().info('\033[1;37;44m' + msg + '\033[0m')
@@ -285,18 +295,23 @@ def test_ArmVehicle(robot_tester):
 
 
 def test_TakeoffVehicle(robot_tester):
-    robot_tester.takeoff_vehicle()
+    if( not robot_tester.takeoff_vehicle() ):
+        robot_tester.error_msg('Not able to takeoff')
+        return False
     return robot_tester.reachesTakeOffAltitude(timeout=60, distance=0.5)
 
 
 def test_RTLVehicle(robot_tester):
     robot_tester.info_msg('RTL_vehicle')
-    robot_tester.RTL_vehicle()
+    if( not robot_tester.RTL_vehicle() ):
+        robot_tester.error_msg('Not able to start the RTL flight mode')
+        return False
     return robot_tester.reachesRTL(timeout=60, distance=0.5)
 
 
 def run_all_tests(robot_tester):
     # set transforms to use_sim_time
+    time.sleep(20) # wait for PX4 to set up everything
     result = True
     if (result):
         resutl = test_ArmVehicle(robot_tester)
@@ -316,14 +331,33 @@ def run_all_tests(robot_tester):
 
 def get_testers(args):
     testers = []
+    goal_pose = []
+    timeout = []
+    tolerance_position = []
 
-    if args.robot:
+    if(args.file):
+        print("Opening file %s" % args.file)
+        with open(args.file) as f:
+            values = [[x for x in line.split()] for line in f]
+        for waypoint in values:
+            goal_pose.append(waypoint[0:4])
+            timeout.append([waypoint[4]])
+            tolerance_position.append([waypoint[5]])
+    elif args.robot:
         # Requested tester for one robot
-        tester = DroneTester(goal_pose=args.robot,
-                             timeout=args.timeout,
-                             tolerance_position=args.tolerance_position)
-        testers.append(tester)
+        goal_pose = args.robot
+        timeout = args.timeout
+        tolerance_position = args.tolerance_position
+    else:
         return testers
+
+    print(goal_pose)
+    print(timeout)
+    print(tolerance_position)
+    tester = DroneTester(goal_pose=goal_pose,
+                         timeout=timeout,
+                         tolerance_position=tolerance_position)
+    testers.append(tester)
     return testers
 
 
@@ -339,6 +373,9 @@ def main(argv=sys.argv[1:]):
     parser.add_argument('-t', '--timeout', action='append', nargs=1,
                        metavar=('time_out'),
                        help='Time out')
+    parser.add_argument('-f', '--file', nargs='?',
+                       metavar=('file'),
+                       help='Filename with waypoints [x, y, z, heading, timeout, tolerance]')
 
     args, unknown = parser.parse_known_args()
 
