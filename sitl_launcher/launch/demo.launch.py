@@ -88,13 +88,13 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     declare_use_rviz_cmd = DeclareLaunchArgument(
         'use_rviz',
-        default_value='False',
+        default_value='True',
         description='Whether to start RVIZ')
 
     use_qgroundcontrol = LaunchConfiguration('use_qgroundcontrol')
     declare_use_qgroundcontrol_cmd = DeclareLaunchArgument(
         'use_qgroundcontrol',
-        default_value='False',
+        default_value='True',
         description='Whether to start QGroundcontrol')
 
     include_nodes = [included_launch]
