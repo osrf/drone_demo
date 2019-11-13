@@ -21,9 +21,11 @@ import os
 def generate_launch_description():
 
     gazebo_dir = get_package_share_directory('gazebo_ros')
+    ir_beacon_gazebo_pkg_dir = get_package_share_directory('ir_beacon_gazebo_pkg')
+
     included_launch = launch.actions.IncludeLaunchDescription(
                 launch.launch_description_sources.PythonLaunchDescriptionSource(gazebo_dir + '/launch/gazebo.launch.py'),
-                launch_arguments={'world': 'worlds/iris_beacon.world',
+                launch_arguments={'world': ir_beacon_gazebo_pkg_dir + "/worlds/iris_beacon.world",
                                   'paused': 'false',
                                   'physics': 'ode'}.items()
                 )
