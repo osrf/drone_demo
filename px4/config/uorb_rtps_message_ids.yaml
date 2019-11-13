@@ -268,7 +268,9 @@ rtps:
     id: 115
   - msg: onboard_computer_status
     id: 116
-  ########## multi topics: begin ##########
+  - msg: cellular_status
+    id: 117
+########## multi topics: begin ##########
   - msg: actuator_controls_0
     id: 150
     alias: actuator_controls
