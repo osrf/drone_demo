@@ -28,10 +28,10 @@ using namespace std::chrono_literals;
 
 using std::placeholders::_1;
 
-class MinimalSubscriber : public rclcpp::Node
+class DroneTFBroadcaster : public rclcpp::Node
 {
 public:
-  MinimalSubscriber()
+  DroneTFBroadcaster()
   : Node("drone_odom_broadcast"),
    clock_(get_clock()),
    buffer(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME))
@@ -58,7 +58,7 @@ public:
     get_parameter("vehicle_odometry", vehicle_odometry_str);
 
     subscription_ = this->create_subscription<px4_msgs::msg::VehicleOdometry>(
-      vehicle_odometry_str, 10, std::bind(&MinimalSubscriber::topic_callback, this, _1));
+      vehicle_odometry_str, 10, std::bind(&DroneTFBroadcaster::topic_callback, this, _1));
 
   }
   void init_tf_broadcaster()
@@ -134,7 +134,7 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<MinimalSubscriber>();
+  auto node = std::make_shared<DroneTFBroadcaster>();
   node->init_tf_broadcaster();
   rclcpp::spin(node);
   rclcpp::shutdown();
