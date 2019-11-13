@@ -11,89 +11,13 @@
       <uri>model://ground_plane</uri>
     </include>
 
-    <model name="iris_ir_camera">
-      <pose>0 0 2.05 0 0 0</pose>
-
-      <include>
-        <uri>model://iris</uri>
-      </include>
-  
-      <link name="ir_camera_link">
-        <pose>0.0 0.0 -0.04 0 1.57 0</pose>
-        <inertial>
-          <mass>0.1</mass>
-          <inertia>
-            <ixx>0.000166667</ixx>
-            <iyy>0.000166667</iyy>
-            <izz>0.000166667</izz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.01 0.01 0.01</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>0.01 0.01 0.01</size>
-            </box>
-          </geometry>
-        </visual>
-        <sensor name="camera" type="camera">
-          <camera>
-            <horizontal_fov>1.29154</horizontal_fov>
-            <image>
-              <width>640</width>
-              <height>512</height>
-              <format>L8</format>
-            </image>
-            <clip>
-              <near>0.1</near>
-              <far>500</far>
-            </clip>
-          </camera>
-          <always_on>1</always_on>
-          <update_rate>30</update_rate>
-          <visualize>false</visualize>
-          <plugin name="ir" filename="libgazebo_irsensor_plugin.so">
-            <target>ir_beacon::led_mount::IR_LED_01</target>
-            <target>ir_beacon::led_mount::IR_LED_02</target>
-            <target>ir_beacon::led_mount::IR_LED_03</target>
-            <target>ir_beacon::led_mount::IR_LED_04</target>
-          </plugin>
-
-          <plugin name="camera_plugin" filename="libgazebo_ros_camera.so">
-            <alwaysOn>true</alwaysOn>
-            <!-- Keep this zero, update_rate in the parent <sensor> tag
-              will control the frame rate. -->
-            <updateRate>0.0</updateRate>
-            <cameraName>ir_camera</cameraName>
-            <imageTopicName>/ir_camera/image_raw</imageTopicName>
-            <cameraInfoTopicName>/ir_camera/camera_info</cameraInfoTopicName>
-            <frameName>ir_camera_link</frameName>
-            <distortionK1>0</distortionK1>
-            <distortionK2>0</distortionK2>
-            <distortionK3>0</distortionK3>
-            <distortionT1>0</distortionT1>
-            <distortionT2>0</distortionT2>
-          </plugin>
-        </sensor>
-      </link>
-
-      <joint name="ir_camera_joint" type="fixed">
-        <parent>iris::base_link</parent>
-        <child>ir_camera_link</child>
-      </joint>
-    </model>
-
     <include>
       <uri>model://ir_beacon</uri>
+      <pose>2.0 0.0 0 0 0 0</pose>
     </include>
 
     <model name="drone_rack">
+      <pose>2.0 0.0 0 0 0 0</pose>
       <static>true</static>
       <link name="tl">
         <pose>0.15 -0.15 1.0</pose>
@@ -201,6 +125,27 @@
       </link>
     </model>
 
+    <physics name='default_physics' default='0' type='ode'>
+      <gravity>0 0 -9.8066</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>10</iters>
+          <sor>1.3</sor>
+          <use_dynamic_moi_rescaling>0</use_dynamic_moi_rescaling>
+        </solver>
+        <constraints>
+          <cfm>0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+      <magnetic_field>6.0e-6 2.3e-5 -4.2e-5</magnetic_field>
+    </physics>
 
 
   </world>
