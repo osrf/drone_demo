@@ -6,20 +6,19 @@ You will need `rocker` `docker` and `nvidia-docker` installed. See the prerequis
 
 https://github.com/osrf/px4sitl/blob/master/install.md
 
-
 There are also some notes about how to make it work without an nvidia card as well. Mileage may vary.
 
 To run the demo from the hosted docker images you can simply invoke
 
 `rocker --x11 --nvidia --user --home --pulse tfoote/drone_demo`
 
-## Modifying or building your own 
+## Modifying or building your own
 
 See the Dockerfiles and docs in the `docker_deploy` branch: https://github.com/osrf/drone_demo/tree/docker_deploy
 
 ## What you'll see when you launch
 
-By default it will launch gazebo headless, QGroundControl, and a small python script that will prompt you for how many of what type of drones to launch. 
+By default it will launch gazebo headless, QGroundControl, and a small python script that will prompt you for how many of what type of drones to launch.
 
 You can select up to 4 total drones.
 
@@ -31,12 +30,16 @@ Once they have initialized you can interact with them via QGroundControl.
 
 If you'd like to change behavior you can pass argumets with a command like this:
 
-`rocker --x11 --nvidia --user --home --pulse tfoote/drone_demo roslaunch sitl_launcher demo.launch gui:=false sitl_world:=yosemite`
+`rocker --x11 --nvidia --user --home --pulse tfoote/drone_demo roslaunch sitl_launcher demo.launch gui:=false use_rviz:=true use_qgroundcontrol:=true sitl_world:=yosemite`
 
 `gui:=true` will enable the Gazebo head
 
-Other valid sitl_worlds are: `mcmillan`, `ksql`, and `baylands`.
+`sitl_world:=yosemite` will open a specific world. Other valid sitl_worlds are: `mcmillan`, `ksql`, and `baylands`.
 
-You can also pass arguments via `drone_args` to skip the drone selector gui and immediately start the selected drones. 
+`use_qgroundcontrol:=true` will enable QGroundControl
+
+`use_rviz:=true` will enable RVIZ2
+
+You can also pass arguments via `drone_args` to skip the drone selector gui and immediately start the selected drones.
 
 The script is here: https://github.com/osrf/drone_demo/blob/master/sitl_launcher/scripts/launch_drone
