@@ -136,7 +136,7 @@ The ROS 2 graph using one Iris and one plane:
 
 ![](img/system2.png)
 
-The drone demonstrator allows to use multirobot. As you can see each drone in the system has its own namespace.
+The drone demonstrator allows to use multirobot. As you can see each drone in the system has its own [namespace](http://wiki.ros.org/Names).
 
  - Iris namespace is `iris_0`
  - plane namespace is `plane_1`
