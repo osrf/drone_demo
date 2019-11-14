@@ -48,7 +48,7 @@ This drone demonstrator runs Gazebo, PX4, QGroundcontrol, and some other ROS 2 c
 
 ### Gazebo and PX4
 
-The launchfile [demo.launch.py](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/sitl_launcher/launch/demo.launch.py) creates the Gazebo world and also it launches an GUI to select the drones that you want to include in the world. The GUI has the following aspect:
+The launchfile [demo.launch.py](https://github.com/osrf/drone_demo/blob/ahcorde/ros2/sitl_launcher/launch/demo.launch.py) creates the Gazebo world and also it launches an GUI to select the drones that you want to include in the world. The GUI has the following aspect:
 
 ![](img/gui_drone_selector.png)
 
@@ -105,11 +105,11 @@ This node converts the [px4_msgs/BatteryStatus](https://github.com/PX4/px4_msgs/
 
 #### Publishers:
  - `battery_status` publish [sensor_msgs/BaterryState](https://github.com/ros2/common_interfaces/blob/master/sensor_msgs/msg/BatteryState.msg) message.
- - `flight_mode` publish [proposed_aerial_msgs::msg::FlightMode](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/FlightMode.msg)
- - `vehicle_status` publish [proposed_aerial_msgs::msg::VehicleStatus](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/VehicleStatus.msg)
+ - `flight_mode` publish [proposed_aerial_msgs::msg::FlightMode](https://github.com/osrf/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/FlightMode.msg)
+ - `vehicle_status` publish [proposed_aerial_msgs::msg::VehicleStatus](https://github.com/osrf/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/VehicleStatus.msg)
  - `odometry` publish [nav_msgs::msg::Odometry](https://github.com/ros2/common_interfaces/blob/master/nav_msgs/msg/Odometry.msg)
  - `vehicle_gps_position` publish [sensor_msgs::msg::NavSatFix](https://github.com/ros2/common_interfaces/blob/master/sensor_msgs/msg/NavSatFix.msg)
- - `attitude` publish [proposed_aerial_msgs::msg::Attitude](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/Attitude.msg)
+ - `attitude` publish [proposed_aerial_msgs::msg::Attitude](https://github.com/osrf/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/Attitude.msg)
 
 
 #### Subscribers:
@@ -118,7 +118,7 @@ This node converts the [px4_msgs/BatteryStatus](https://github.com/PX4/px4_msgs/
 
 #### Actions
 
- - `set_flight_mode` creates the action [proposed_aerial_msgs::action::SetFlightMode](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/action/SetFlightMode.action)
+ - `set_flight_mode` creates the action [proposed_aerial_msgs::action::SetFlightMode](https://github.com/osrf/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/action/SetFlightMode.action)
 
 ### RVIZ 2
 
