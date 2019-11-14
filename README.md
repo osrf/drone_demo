@@ -44,17 +44,17 @@ The script is here: https://github.com/osrf/drone_demo/blob/master/sitl_launcher
 
 ## Docs
 
-This drone demonstrator runs Gazebo, PX4, QGroundcontrol, and some other ROS 2.0 components. In this section we will provide some details about the inner ROS 2.0 architecture.
+This drone demonstrator runs Gazebo, PX4, QGroundcontrol, and some other ROS 2 components. In this section we will provide some details about the inner ROS 2 architecture.
 
 ### Gazebo and PX4
 
-The launchfile demo.launch.py creates the Gazebo world and also it launches an GUI to select the drones that you want to include in the world. The GUI has the following aspect:
+The launchfile [demo.launch.py](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/sitl_launcher/launch/demo.launch.py) creates the Gazebo world and also it launches an GUI to select the drones that you want to include in the world. The GUI has the following aspect:
 
 ![](img/gui_drone_selector.png)
 
-When you have selected the drones and clicked in the "Done Selecting" button, this node will expand in the world the drones. Each one of the drones will launch a PX4 instance. These instances connect with a bridge called [ros2_to_serial_bridge](https://github.com/osrf/ros2_serial_example/tree/master/ros2_serial_example) with converts the uORB messages into ROS 2 `px4_msgs` messages.
+When you have selected the drones and clicked in the "Done Selecting" button, this node will expand in the world the drones. Each one of the drones will launch a PX4 instance. These instances connect with a bridge called [ros2_to_serial_bridge](https://github.com/osrf/ros2_serial_example/tree/master/ros2_serial_example) with converts the [uORB messages](https://dev.px4.io/v1.9.0/en/middleware/uorb.html) into ROS 2 [px4_msgs](https://github.com/PX4/px4_msgs/) messages.
 
-Inside PX4 code there is a file called `uorb_rtps_message_ids.yaml` which defines the publishers and subscribers that the bridge will connect. For example, the `battery_status` message will be send by the PX4 uORB publisher and the bridge will republish this message into the ROS 2 network using `px4_msgs/BatteryStatus` message. Something similar happens with subscriber like `vehicle_command` which is defined as `receive`, the bridge will create a subscriber with `px4_msgs/VehicleCommand` message and this will be republish into the PX4 uORB network.
+Inside PX4 code there is a file called [uorb_rtps_message_ids.yaml](https://github.com/PX4/Firmware/blob/master/msg/tools/uorb_rtps_message_ids.yaml) which defines the publishers and subscribers that the bridge will connect. For example, the `battery_status` message will be send by the PX4 uORB publisher and the bridge will republish this message into the ROS 2 network using [px4_msgs/BatteryStatus](https://github.com/PX4/px4_msgs/blob/master/msg/BatteryStatus.msg) message. Something similar happens with subscriber like `vehicle_command` which is defined as `receive`, the bridge will create a subscriber with [px4_msgs/VehicleCommand](https://github.com/PX4/px4_msgs/blob/master/msg/VehicleCommand.msg) message and this will be republish into the PX4 uORB network.
 
 ```yaml
 - msg: battery_status
@@ -70,7 +70,7 @@ Gazebo launches some nodes thanks to some of the plugins running for each drone.
 
 **NOTES**
  - In the official documentation of PX4 you can find [more details](https://dev.px4.io/v1.9.0/en/middleware/micrortps.html#ros2ros-application-pipeline)
- - If you want to understand how the `ros2_serial_bridge` works there is an extense [readme](https://github.com/osrf/ros2_serial_example).
+ - If you want to understand how the [ros2_to_serial_bridge](https://github.com/osrf/ros2_serial_example/tree/master/ros2_serial_example) works there is an extense [readme](https://github.com/osrf/ros2_serial_example).
 
 ## ROS 2
 
@@ -83,7 +83,7 @@ Based on the section above we will have a node publishing some topics:
   - `/iris_0/vehicle_status`: it contains internal information about the drone such us arming state, flight mode, etc
   - `/iris_0/battery_status`: it contains data about the voltage, cells, etc
   - `/iris_0/vehicle_land_detected`: it contains information about the landing state
-  - `/iris_0/vehicle_odometry`: Fits ROS REP 147 for aerial vehicles
+  - `/iris_0/vehicle_odometry`: Vehicle odometry. It fits ROS REP 147 for aerial vehicles
 
 and one subscription to:
 
@@ -93,37 +93,36 @@ and one subscription to:
 
 ### drone_odom_broadcast
 
-This node is subscribed to `vehicle_odometry` topic from  `ros2_serial_bridge` node. This node publish the `odom` topic and broadcast the corresponding transforms to `tf`.
+This node is subscribed to `vehicle_odometry` topic from  [ros2_to_serial_bridge](https://github.com/osrf/ros2_serial_example/tree/master/ros2_serial_example) node. This node publish the `odom` topic and broadcast the corresponding transforms to [tf](http://wiki.ros.org/tf).
 
 ![](img/odom.png)
 
 ### drone_node
 
-This node converts the `px4_msgs` messages generated by the `ros2_to_serial_bridge` node to [REP 147 messages](https://www.ros.org/reps/rep-0147.html)
+This node converts the [px4_msgs/BatteryStatus](https://github.com/PX4/px4_msgs/blob/master/msg/BatteryStatus.msg) messages generated by the ros2_to_serial_bridge node to [REP 147 messages](https://www.ros.org/reps/rep-0147.html)
 
 ![](img/drone_node.png)
 
 #### Publishers:
- - `battery_status` publish `Sensor_msgs/baterryState` message.
- - `flight_mode` publish `proposed_aerial_msgs::msg::FlightMode`
- - `vehicle_status` publish `proposed_aerial_msgs::msg::VehicleStatus`
- - `odometry` publish `nav_msgs::msg::Odometry`
- - `vehicle` publish `command px4_msgs::msg::VehicleCommand`
- - `vehicle_gps_position` publish `sensor_msgs::msg::NavSatFix`
- - `attitude` publish `proposed_aerial_msgs::msg::Attitude`
+ - `battery_status` publish [sensor_msgs/BaterryState](https://github.com/ros2/common_interfaces/blob/master/sensor_msgs/msg/BatteryState.msg) message.
+ - `flight_mode` publish [proposed_aerial_msgs::msg::FlightMode](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/FlightMode.msg)
+ - `vehicle_status` publish [proposed_aerial_msgs::msg::VehicleStatus](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/VehicleStatus.msg)
+ - `odometry` publish [nav_msgs::msg::Odometry](https://github.com/ros2/common_interfaces/blob/master/nav_msgs/msg/Odometry.msg)
+ - `vehicle_gps_position` publish [sensor_msgs::msg::NavSatFix](https://github.com/ros2/common_interfaces/blob/master/sensor_msgs/msg/NavSatFix.msg)
+ - `attitude` publish [proposed_aerial_msgs::msg::Attitude](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/msg/Attitude.msg)
 
 
 #### Subscribers:
 
- - `command_pose` is subscribed to `geometry_msgs::msg::PoseStamped`
+ - `command_pose` is subscribed to [geometry_msgs::msg::PoseStamped](https://github.com/ros2/common_interfaces/blob/master/geometry_msgs/msg/PoseStamped.msg)
 
 #### Actions
 
- - `set_flight_mode` creates the action `proposed_aerial_msgs::action::SetFlightMode`
+ - `set_flight_mode` creates the action [proposed_aerial_msgs::action::SetFlightMode](https://github.com/ahcorde/drone_demo/blob/ahcorde/ros2/proposed_aerial_msgs/action/SetFlightMode.action)
 
 ### RVIZ 2
 
-RVIZ2 is subscribed to topics coming from `drone_noede` node and tf. Using the interface you can also send some commands.
+RVIZ2 is subscribed to topics coming from `drone_node` node and tf. Using the interface you can also send some commands.
 
 ![](img/rviz2.png)
 
