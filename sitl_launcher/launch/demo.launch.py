@@ -53,23 +53,29 @@ class ReplaceWorldString(launch.Substitution):
 
   def perform(self, context: launch.LaunchContext) -> Text:
 
-      sitl_world = launch.utilities.perform_substitutions(context, self.name)
+    try:
+        sitl_world = launch.utilities.perform_substitutions(context, self.name)
+    except:
+        sitl_world = 'yosemite'
 
-      if(sitl_world=="yosemite"):
-          pkg_shared_directory = 'yosemite_valley'
-          launch_file = 'drone_yosemite.launch.py'
-      elif(sitl_world=="mcmillan"):
-          pkg_shared_directory = 'mcmillan_airfield'
-          launch_file = 'drone_mcmillan.launch.py'
-      elif(sitl_world=="ksql"):
-          pkg_shared_directory = 'ksql_airport'
-          launch_file = 'drone_ksql.launch.py'
-      elif(sitl_world=="baylands"):
-          pkg_shared_directory = 'baylands'
-          launch_file = 'drone_baylands.launch.py'
+    pkg_shared_directory = 'yosemite_valley'
+    launch_file = 'drone_yosemite.launch.py'
 
-      world_dir = get_package_share_directory(pkg_shared_directory)
-      return world_dir + '/launch/' + launch_file
+    if(sitl_world=="yosemite"):
+      pkg_shared_directory = 'yosemite_valley'
+      launch_file = 'drone_yosemite.launch.py'
+    elif(sitl_world=="mcmillan"):
+      pkg_shared_directory = 'mcmillan_airfield'
+      launch_file = 'drone_mcmillan.launch.py'
+    elif(sitl_world=="ksql"):
+      pkg_shared_directory = 'ksql_airport'
+      launch_file = 'drone_ksql.launch.py'
+    elif(sitl_world=="baylands"):
+      pkg_shared_directory = 'baylands'
+      launch_file = 'drone_baylands.launch.py'
+
+    world_dir = get_package_share_directory(pkg_shared_directory)
+    return world_dir + '/launch/' + launch_file
 
 
 def generate_launch_description():
