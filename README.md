@@ -1,30 +1,49 @@
+# Drone demo in ROS 2/Gazebo/RVIZ 2
+
 This repository contains the contents for a drone demonstration.
 
-It is running Gazebo, PX4, QGroundControl and several other components.
+It is running Gazebo, PX4, QGroundControl and some other ROS 2 nodes.
 
-You will need `rocker` `docker` and `nvidia-docker` installed. See the prerequisite instructions here:
+# Video + Pictures
 
-https://github.com/osrf/px4sitl/blob/master/install.md
+A video and screenshots of the demo can be seen in the [ROS wiki](https://wiki.ros.org/ng_drones):
 
+![Prius Image](img/screenshot.png)
+
+# Requirements
+
+This demo has been tested on Ubuntu Bionic (18.04)
+
+* An X server
+* [Docker](https://www.docker.com/get-docker)
+* [nvidia-docker2](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0))
+* The current user is a member of the docker group or other group with docker execution rights.
+* [rocker](https://github.com/osrf/rocker)
+
+See the prerequisite instructions [here](https://github.com/osrf/px4sitl/blob/master/install.md):
 
 There are also some notes about how to make it work without an nvidia card as well. Mileage may vary.
+
+# Running
 
 To run the demo from the hosted docker images you can simply invoke
 
 `rocker --x11 --nvidia --user --home --pulse tfoote/drone_demo`
 
+An [RVIZ](http://wiki.ros.org/rviz) window will open showing the drones, sensor output and an [interactive marker](http://wiki.ros.org/interactive_markers) and some buttons to control the drones. A gazebo window will appear showing the simulation.
+
 ## Modifying or building your own
 
-See the Dockerfiles and docs in the `docker_deploy` branch: https://github.com/osrf/drone_demo/tree/docker_deploy
+See the Dockerfiles and docs in the `docker_deploy` [branch](https://github.com/osrf/drone_demo/tree/docker_deploy):
 
 ## What you'll see when you launch
 
 By default it will launch gazebo headless, QGroundControl, and a small python script that will prompt you for how many of what type of drones to launch.
 
-You can select up to 4 total drones.
+**You can select up to 4 total drones.**
 
 After that gazebo models of the instances will be spawned with appropriately parameterized PX4 autopilots connected.
-Once they have initialized you can interact with them via QGroundControl.
+Once they have initialized you can interact with them via QGroundControl or RVIZ2.
 
 
 ### Changing Behavior
@@ -41,10 +60,9 @@ You can also pass arguments via `drone_args` to skip the drone selector gui and 
 
 The script is here: https://github.com/osrf/drone_demo/blob/master/sitl_launcher/scripts/launch_drone
 
-
 ## Docs
 
-This drone demonstrator runs Gazebo, PX4, QGroundcontrol, and some other ROS 2 components. In this section we will provide some details about the inner ROS 2 architecture.
+This drone demonstrator runs Gazebo, PX4, QGroundcontrol and some other ROS 2 components. In this section we will provide some details about the inner ROS 2 architecture.
 
 ### Gazebo and PX4
 
