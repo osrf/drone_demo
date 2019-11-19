@@ -21,17 +21,40 @@ from ament_index_python.packages import get_package_share_directory, get_package
 
 import rclpy
 
-xacro_args = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder > /tmp/%(vehicle_name)s.urdf'
+xacro_args_array = ['name:=%(vehicle_name)s',
+                    'visual_material:=Black',
+                    'rotors_description_dir:=%(description_path)s/rotors_description',
+                    'enable_ground_truth:=true',
+                    'enable_camera:=true',
+                    'mavlink_udp_port:=%(mavlink_udp_port)s',
+                    'mavlink_tcp_port:=%(mavlink_tcp_port)s',
+                    'camera_udp_port:=%(camera_udp_port)s',
+                    'camera_control_udp_port:=%(camera_control_udp_port)s',
+                    'camera_enable:=false --inorder > /tmp/%(vehicle_name)s.urdf']
+xacro_args = " ".join(xacro_args_array)
+print(xacro_args)
 valid_models = {
-    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.urdf.xacro ' + xacro_args,
-    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.urdf.xacro ' + xacro_args,
+    'iris': 'ros2 run xacro xacro %(description_path)s/rotors_description/urdf/%(drone_type)s_base.xacro ' + xacro_args,
+    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.urdf.xacro vehicle_name:=%(vehicle_name)s ' + xacro_args,
     'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args,
 }
 
-xacro_args_sdf = 'vehicle_name:=%(vehicle_name)s rotors_description_dir:=%(description_path)s mavlink_udp_port:=%(mavlink_udp_port)s mavlink_tcp_port:=%(mavlink_tcp_port)s camera_udp_port:=%(camera_udp_port)s camera_control_udp_port:=%(camera_control_udp_port)s camera_enable:=false --inorder'
+xacro_args_sdf_array = [ 'name:=%(vehicle_name)s',
+                         'visual_material:=Black',
+                         'enable_ground_truth:=true',
+                         'enable_camera:=true',
+                         'rotors_description_dir:=%(description_path)s/rotors_description',
+                         'mavlink_udp_port:=%(mavlink_udp_port)s',
+                         'mavlink_tcp_port:=%(mavlink_tcp_port)s',
+                         'camera_udp_port:=%(camera_udp_port)s',
+                         'camera_control_udp_port:=%(camera_control_udp_port)s',
+                         'camera_enable:=false --inorder']
+xacro_args_sdf = " ".join(xacro_args_sdf_array)
+print(xacro_args_sdf)
+
 valid_models_sdf = {
-    'iris': 'ros2 run xacro xacro %(description_path)s/iris/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
-    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
+    'iris': 'ros2 run xacro xacro %(description_path)s/rotors_description/urdf/%(drone_type)s_base.xacro ' + xacro_args_sdf,
+    'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro vehicle_name:=%(vehicle_name)s ' + xacro_args_sdf,
     'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
 }
 
@@ -54,8 +77,8 @@ def spawn_model(node, model_name, model_xml,
     while not cli.wait_for_service(timeout_sec=1.0):
         print('service not available, waiting again...')
 
-    if debug:
-        print(model_xml)
+    # if debug:
+    #     print(model_xml)
 
     req = SpawnEntity.Request()
     req.name = model_name
