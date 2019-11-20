@@ -204,7 +204,7 @@ class Drone:
         subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher",
                             "/tmp/"+ self.vehicle_name +".urdf",
                             "--ros-args",
-                            "-r", "use_sim_time:=True",
+                            "-p", "use_sim_time:=True",
                             "-r", "__ns:=/" + self.vehicle_name])
 
     def spawn(self):

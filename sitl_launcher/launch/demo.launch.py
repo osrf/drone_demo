@@ -112,7 +112,8 @@ def generate_launch_description():
         package='rviz2',
         node_executable='rviz2',
         node_name='rviz2',
-        arguments=['-d', sitl_launcher_dir + "/rviz/rviz.rviz"],
+        arguments=['-d', sitl_launcher_dir + "/rviz/rviz.rviz", "--ros-args",
+                   "-p", "use_sim_time:=True"],
         output='screen')
 
     start_qgroundcontrol_cmd = Node(
