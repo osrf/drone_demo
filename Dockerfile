@@ -66,17 +66,15 @@ RUN /bin/sh -c 'echo ". /opt/ros/eloquent/setup.bash" >> ~/.bashrc' \
 
 RUN mkdir  /workspace/drone_demo_ros2/src -p
 WORKDIR /workspace/drone_demo_ros2/src
-RUN git clone https://github.com/ahcorde/drone_demo.git -b ahcorde/ros2
-RUN git clone https://github.com/osrf/sitl_gazebo -b ahcorde/urdf_models --recursive
+RUN git clone https://github.com/osrf/drone_demo.git -b ahcorde/ros2
+RUN git clone https://github.com/osrf/sitl_gazebo -b ros2 --recursive
 RUN git clone https://github.com/osrf/uav_testing.git -b ros2
 RUN git clone https://github.com/osrf/rviz_aerial_plugins.git
 RUN git clone https://github.com/osrf/ros2_serial_example.git
 RUN git clone https://github.com/PX4/px4_msgs.git
 
+# TODO(ahcorde): remove this cherry-pick when PR is merged
 RUN git config --global  user.name "someone" && git config --global user.email "someone@someplace.com"
-RUN cd /workspace/drone_demo_ros2/src/sitl_gazebo \
- && git fetch && git pull \
- && git cherry-pick f6708023fbc7466147de6c87ef7a3dad8c0aa19a e790b1ab0b44a14b573a2f1b4d45e0fb791a8f7f f9da71d926210398511c07109ed12681e5a1f7a7 322c22c162872a00b7bff9d7203e97dd11e06dc5 0a1660045afcd31e3529f469357a7db7c2736856 52993ec5904e79553744a4eb89bd654f70dd21c6
 
 RUN apt-get update  && apt-get install python-jinja2 -y && apt-get clean
 
