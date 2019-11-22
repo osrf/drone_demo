@@ -1,5 +1,5 @@
-#ifndef RVIZ_AERIAL_PLUGINS_GEODETIC_CONVERTER_HPP_
-#define RVIZ_AERIAL_PLUGINS_GEODETIC_CONVERTER_HPP_
+#ifndef GEODETIC_CONVERTER_HPP_
+#define GEODETIC_CONVERTER_HPP_
 
 #include <math.h>
 #include <eigen3/Eigen/Dense>
@@ -68,4 +68,4 @@ private:
   Matrix3x3d ned_to_ecef_matrix_;
 
 };
-#endif  // RVIZ_AERIAL_PLUGINS_GEODETIC_CONVERTER_HPP_
+#endif  // GEODETIC_CONVERTER_HPP_
