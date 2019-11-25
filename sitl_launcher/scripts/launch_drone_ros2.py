@@ -24,6 +24,7 @@ import rclpy
 xacro_args_array = ['name:=%(vehicle_name)s',
                     'visual_material:=Black',
                     'rotors_description_dir:=%(description_path)s/rotors_description',
+                    'typhoon_dir:=%(description_path)s/typhoon_h480',
                     'enable_ground_truth:=true',
                     'enable_camera:=true',
                     'mavlink_udp_port:=%(mavlink_udp_port)s',
@@ -36,12 +37,13 @@ print(xacro_args)
 valid_models = {
     'iris': 'ros2 run xacro xacro %(description_path)s/rotors_description/urdf/%(drone_type)s_base.xacro ' + xacro_args,
     'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.urdf.xacro vehicle_name:=%(vehicle_name)s ' + xacro_args,
-    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args,
+    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/urdf/%(drone_type)s_base.xacro ' + xacro_args,
 }
 
 xacro_args_sdf_array = [ 'name:=%(vehicle_name)s',
                          'visual_material:=Black',
                          'enable_ground_truth:=true',
+                         'typhoon_dir:=%(description_path)s/typhoon_h480',
                          'enable_camera:=true',
                          'rotors_description_dir:=%(description_path)s/rotors_description',
                          'mavlink_udp_port:=%(mavlink_udp_port)s',
@@ -55,7 +57,7 @@ print(xacro_args_sdf)
 valid_models_sdf = {
     'iris': 'ros2 run xacro xacro %(description_path)s/rotors_description/urdf/%(drone_type)s_base.xacro ' + xacro_args_sdf,
     'plane': 'ros2 run xacro xacro %(description_path)s/plane/%(drone_type)s.sdf.xacro vehicle_name:=%(vehicle_name)s ' + xacro_args_sdf,
-    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/%(drone_type)s.sdf.xacro ' + xacro_args_sdf,
+    'typhoon_h480': 'ros2 run xacro xacro %(description_path)s/typhoon_h480/urdf/%(drone_type)s_base.xacro ' + xacro_args_sdf,
 }
 
 starting_poses={
