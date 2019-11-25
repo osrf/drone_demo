@@ -66,7 +66,7 @@ RUN /bin/sh -c 'echo ". /opt/ros/eloquent/setup.bash" >> ~/.bashrc' \
 
 RUN mkdir  /workspace/drone_demo_ros2/src -p
 WORKDIR /workspace/drone_demo_ros2/src
-RUN git clone https://github.com/osrf/drone_demo.git -b ahcorde/ros2
+RUN git clone https://github.com/osrf/drone_demo.git
 RUN git clone https://github.com/osrf/sitl_gazebo -b ros2 --recursive
 RUN git clone https://github.com/osrf/uav_testing.git -b ros2
 RUN git clone https://github.com/osrf/rviz_aerial_plugins.git
