@@ -1,0 +1,9 @@
+# Define the goal
+FlightMode goal # The desired flight mode
+---
+# Define the result
+FlightMode result # The resultant state after the attempted transition.
+bool success # True if desired change was executed False otherwise.
+---
+# Define a feedback message
+FlightMode state # The resultant state after the attempted transition.

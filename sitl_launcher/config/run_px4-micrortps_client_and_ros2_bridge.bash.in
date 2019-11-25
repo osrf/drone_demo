@@ -1,0 +1,15 @@
+#!/bin/bash
+
+launch_micrortps_client () { px4-micrortps_client --instance %(vehicle_id)s start -t UDP -r %(udp_send_port)s  -s %(udp_recv_port)s ; }
+
+sleep 5
+
+while launch_micrortps_client ; ret=$? ; [ $ret -ne 0 ];do
+  echo "Trying again"
+  sleep 1
+done
+
+ros2 run sitl_launcher drone_tf_broadcast --ros-args -r __ns:=/%(vehicle_name)s --params-file %(odom_params)s &
+ros2 run tf2_ros static_transform_publisher %(poseX)s %(poseY)s 0 0 0 0 /map /%(vehicle_name)s/odom --ros-args -p use_sim_time:=True -r __ns:=/%(vehicle_name)s &
+ros2 run drone_node drone_node --ros-args --remap __ns:=/%(vehicle_name)s -p target_system:=%(target_system)s -p use_sim_time:=True &
+ros2 run ros2_serial_example ros2_to_serial_bridge_node --ros-args --params-file %(px4_params)s -r __ns:=/%(vehicle_name)s >> /dev/null

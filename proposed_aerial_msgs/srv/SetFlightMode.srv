@@ -1,8 +1,0 @@
-# targeting mav_msgs
-
-#mav_msgs/
-FlightMode goal # The desired flight mode
----
-#mav_msgs/
-FlightMode result # The resultant state after the attempted transition.
-bool success # True if desired change was executed False otherwise.

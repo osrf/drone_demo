@@ -1,0 +1,32 @@
+<package format="2">
+  <name>drone_node</name>
+  <version>2.0.1</version>
+  <description>
+    Node to manage the PX4 bridge
+  </description>
+  <maintainer email="alex@erlerobotics.com">Alejandro Hernandez</maintainer>
+  <license>All right reserved</license>
+
+  <author>Alejandro Hernandez</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>proposed_aerial_msgs</depend>
+  <depend>px4_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+
+  <test_depend>ament_cmake_cppcheck</test_depend>
+  <test_depend>ament_cmake_cpplint</test_depend>
+  <test_depend>ament_cmake_gmock</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_lint_cmake</test_depend>
+  <test_depend>ament_cmake_uncrustify</test_depend>
+  <test_depend>ament_index_cpp</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

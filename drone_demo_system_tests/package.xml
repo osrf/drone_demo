@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>drone_demo_system_tests</name>
+  <version>0.0.1</version>
+  <description>TODO</description>
+  <maintainer email="alejandro@openrobotics.org">Alejandro Hernández</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>rclcpp</build_depend>
+  <build_depend>rclpy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>proposed_aerial_msgs</build_depend>
+  <build_depend>launch_ros</build_depend>
+  <build_depend>launch_testing</build_depend>
+  <build_depend>gazebo_ros_pkgs</build_depend>
+  <build_depend>launch_ros</build_depend>
+  <build_depend>launch_testing</build_depend>
+
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>launch_testing</exec_depend>
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>gazebo_ros_pkgs</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>launch_testing</exec_depend>
+
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>launch</test_depend>
+  <test_depend>launch_ros</test_depend>
+  <test_depend>launch_testing</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
