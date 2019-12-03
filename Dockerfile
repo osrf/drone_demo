@@ -1,4 +1,4 @@
-FROM osrf/ros2:devel
+FROM osrf/ros:eloquent-desktop
 
 # Tools I find useful during development
 RUN apt-get update \
