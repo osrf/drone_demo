@@ -10,6 +10,6 @@ fi
 
 ARGS=("$@")
 
-rocker --x11 --nvidia --user --home --pulse  $IMG ${ARGS[@]}
+rocker --x11 --nvidia --user --pulse  $IMG ${ARGS[@]}
 
 
