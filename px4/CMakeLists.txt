@@ -15,7 +15,8 @@ ExternalProject_Add(firmware
   # SOURCE_DIR "${firmware_path}/Tools/sitl_gazebo"
   CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
   INSTALL_COMMAND rsync -avL --exclude .git --exclude build . build/${PX4_TARGET}/bin ${CMAKE_INSTALL_PREFIX}/share/px4
-  CONFIGURE_COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/config/uorb_rtps_message_ids.yaml ./msg/tools/uorb_rtps_message_ids.yaml
+  CONFIGURE_COMMAND wget -q https://raw.githubusercontent.com/PX4/Firmware/master/msg/tools/uorb_rtps_message_ids.yaml -O uorb_rtps_message_ids.yaml
+                    && patch --batch uorb_rtps_message_ids.yaml ${CMAKE_CURRENT_SOURCE_DIR}/config/uorb_rtps_message_ids.patch -o ./msg/tools/uorb_rtps_message_ids.yaml
   BUILD_COMMAND make ${PX4_TARGET}
   BUILD_IN_SOURCE ON
 )
