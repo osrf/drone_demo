@@ -1,0 +1,29 @@
+--- uorb_rtps_message_ids.yaml.1	2019-12-05 11:44:01.981428354 +0100
++++ uorb_rtps_message_ids.yaml	2019-12-05 11:32:24.627127969 +0100
+@@ -203,6 +205,7 @@
+     id: 88
+   - msg: vehicle_command
+     id: 89
++    receive: true
+   - msg: vehicle_command_ack
+     id: 90
+   - msg: vehicle_constraints
+@@ -213,8 +216,10 @@
+     id: 93
+   - msg: vehicle_gps_position
+     id: 94
++    send: true
+   - msg: vehicle_land_detected
+     id: 95
++    send: true
+   - msg: vehicle_local_position
+     id: 96
+   - msg: vehicle_local_position_setpoint
+@@ -230,6 +235,7 @@
+     id: 101
+   - msg: vehicle_status
+     id: 102
++    send: true
+   - msg: vehicle_status_flags
+     id: 103
+   - msg: vehicle_trajectory_waypoint
