@@ -203,6 +203,14 @@ class Drone:
 
         subprocess.check_output(valid_models[drone_type] % self.arguments, shell=True).decode('utf-8')
         self.xml = subprocess.check_output(valid_models_sdf[drone_type] % self.arguments, shell=True).decode('utf-8')
+
+        with open("/tmp/"+ self.vehicle_name +".urdf", 'r') as myfile:
+          data = myfile.read()
+          data = data.replace("package://", "package://mavlink_sitl_gazebo/models/")
+        f = open("/tmp/"+ self.vehicle_name +".urdf", "w")
+        f.write(data)
+        f.close()
+
         subprocess.Popen(["ros2", "run", "robot_state_publisher", "robot_state_publisher",
                             "/tmp/"+ self.vehicle_name +".urdf",
                             "--ros-args",
