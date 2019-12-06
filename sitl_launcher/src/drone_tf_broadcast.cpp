@@ -34,12 +34,12 @@ public:
   DroneTFBroadcaster()
   : Node("drone_odom_broadcast"),
    clock_(get_clock()),
-   buffer(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME))
+   buffer_(clock_)
   {
 
     rclcpp::QoS  odom_and_imu_qos(rclcpp::KeepLast(50));
 
-    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(buffer);
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(buffer_);
 
     odom_pub_ = create_publisher<nav_msgs::msg::Odometry>(std::string("odom"), odom_and_imu_qos);
 
@@ -123,8 +123,8 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
-  tf2_ros::Buffer buffer;
   rclcpp::Clock::SharedPtr clock_;
+  tf2_ros::buffer buffer_;
 
   std::string odom_frame_;
   std::string gyro_link_frame_;
