@@ -124,7 +124,7 @@ private:
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   rclcpp::Clock::SharedPtr clock_;
-  tf2_ros::buffer buffer_;
+  tf2_ros::Buffer buffer_;
 
   std::string odom_frame_;
   std::string gyro_link_frame_;
