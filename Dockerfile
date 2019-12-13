@@ -87,7 +87,7 @@ COPY files/mavlink/package.xml /workspace/drone_demo_ros2/src/mavlink/package.xm
 WORKDIR /workspace
 
 # Get fastrps tarball for fastrtpsgen binary
-RUN wget https://www.eprosima.com/index.php/component/ars/repository/eprosima-fast-rtps/eprosima-fast-rtps-1-7-2/eprosima_fastrtps-1-7-2-linux-tar-gz?format=raw -O /tmp/fastrtps-1.7.2.tar.gz \
+RUN wget -q https://www.eprosima.com/index.php/component/ars/repository/eprosima-fast-rtps/eprosima-fast-rtps-1-7-2/eprosima_fastrtps-1-7-2-linux-tar-gz?format=raw -O /tmp/fastrtps-1.7.2.tar.gz \
  && tar -xf /tmp/fastrtps-1.7.2.tar.gz
 
 ENV FASTRTPSGEN_DIR /workspace/eProsima_FastRTPS-1.7.2-Linux/bin
