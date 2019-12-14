@@ -28,6 +28,7 @@ RUN apt-get update \
   rsync \
   python-empy \
   python-toml \
+  python-yaml \
   python-numpy \
   python-catkin-pkg \
   python3-tk \
