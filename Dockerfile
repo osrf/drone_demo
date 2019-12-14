@@ -6,7 +6,6 @@ RUN apt-get update \
     build-essential \
     lsb-release \
     python-catkin-tools \
-    python-rosinstall \
     sudo \
     wget \
     ros-eloquent-gazebo-dev \
