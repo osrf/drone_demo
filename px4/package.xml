@@ -11,6 +11,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>python-numpy</buildtool_depend>
   <buildtool_depend>python-toml</buildtool_depend>
+  <buildtool_depend>python-yaml</buildtool_depend>
   <buildtool_depend>unzip</buildtool_depend>
 
 
