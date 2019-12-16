@@ -50,9 +50,12 @@ Once they have initialized you can interact with them via QGroundControl or RVIZ
 
 If you'd like to change behavior you can pass argumets with a command like this:
 
-`rocker --x11 --nvidia --user --home --pulse tfoote/drone_demo roslaunch sitl_launcher demo.launch gui:=false sitl_world:=yosemite`
+`rocker --x11 --nvidia --user --home --pulse tfoote/drone_demo ros2 launch sitl_launcher demo.launch.py use_rviz:=true use_qgroundcontrol:=true gui:=true verbose:=true sitl_world:=yosemite`
 
 `gui:=true` will enable the Gazebo head
+`verbose:=true` will enable Gazebo debug traces
+`use_qgroundcontrol:=true` will enable QGrounControl
+`use_rviz:=true` use_rviz:=true
 
 Other valid sitl_worlds are: `mcmillan`, `ksql`, and `baylands`.
 
