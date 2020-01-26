@@ -156,10 +156,11 @@ valid_models = {
 }
 
 starting_poses={
-    '0': (0,5,0),
-    '1': (0,-5,0),
-    '2': (0,0,0),
-    '3': (0,-2,0),
+    '0': (9,3,0),
+    '1': (11,14,0),
+    '2': (9,13,0),
+    '3': (4,15,0),
+    '4': (7,11,0),
 }
 
 class Drone:
@@ -255,7 +256,7 @@ class DroneSelector:
             self.labels[t].grid(column=0, row=r, sticky='E')
             self.combos[t] = Combobox(self.window, textvariable=self.defaults[t], state='readonly')
             self.combos[t].grid(column=1, row=r)
-            self.combos[t]['values']= (0, 1, 2, 3, 4)
+            self.combos[t]['values']= (0, 1, 2, 3, 4, 5)
 
     def get_drones(self):
         drones = {}
@@ -286,9 +287,9 @@ def main():
 
     parser = argparse.ArgumentParser(description='Spawn a drone')
     # parser.add_argument('drone_type', help="What type of drone", choices=SUPPORTED_DRONE_TYPES)
-    parser.add_argument('--iris', help="What position to start irises in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
-    parser.add_argument('--plane', help="What position to start planes in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
-    parser.add_argument('--typhoon', help="What position to start typhoons in", choices=['0','1','2','3'], default=[], type=str, nargs="*")
+    parser.add_argument('--iris', help="What position to start irises in", choices=['0','1','2','3','4'], default=[], type=str, nargs="*")
+    parser.add_argument('--plane', help="What position to start planes in", choices=['0','1','2','3','4'], default=[], type=str, nargs="*")
+    parser.add_argument('--typhoon', help="What position to start typhoons in", choices=['0','1','2','3','4'], default=[], type=str, nargs="*")
 
     myargv = rospy_myargv(argv=sys.argv)[1:]
     print("myargv", myargv)
