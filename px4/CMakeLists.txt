@@ -14,7 +14,7 @@ include(ExternalProject)
 set(firmware_path "${CMAKE_CURRENT_SOURCE_DIR}/Firmware")
 ExternalProject_Add(firmware
   GIT_REPOSITORY https://github.com/PX4/Firmware.git
-  GIT_TAG master
+  GIT_TAG v1.10.0
   # UPDATE_COMMAND "${firmware_path}/Tools/check_submodules.sh"
   # SOURCE_DIR "${firmware_path}/Tools/sitl_gazebo"
   CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
