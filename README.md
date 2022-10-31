@@ -61,7 +61,7 @@ Other valid sitl_worlds are: `mcmillan`, `ksql`, and `baylands`.
 
 You can also pass arguments via `drone_args` to skip the drone selector gui and immediately start the selected drones.
 
-The script is here: https://github.com/osrf/drone_demo/blob/master/sitl_launcher/scripts/launch_drone
+The script is here: https://github.com/osrf/drone_demo/blob/master/sitl_launcher/scripts/launch_drone_ros2.py
 
 ## Docs
 
